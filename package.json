@@ -1,0 +1,50 @@
+{
+  "name": "@jdlien/validator-utils",
+  "version": "1.1.0",
+  "type": "module",
+  "module": "dist/validator-utils.js",
+  "files": [
+    "dist"
+  ],
+  "description": "Validation and sanitization functions used by @jdlien/Validator.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "coverage": "vitest --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jdlien/validator.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "validation",
+    "utilties",
+    "sanitization",
+    "date",
+    "time",
+    "color"
+  ],
+  "author": "JD Lien",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jdlien/validator-utils/issues"
+  },
+  "homepage": "https://github.com/jdlien/validator-utils#readme",
+  "devDependencies": {
+    "@types/jsdom": "^21.1.0",
+    "@vitest/coverage-c8": "^0.28.5",
+    "canvas": "^2.11.0",
+    "jsdom": "^21.1.0",
+    "jsdom-global": "^3.0.2",
+    "prettier": "^2.8.4",
+    "typescript": "^4.9.3",
+    "vite": "^4.1.0",
+    "vitest": "^0.28.5"
+  },
+  "sideEffects": false
+}
