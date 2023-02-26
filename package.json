@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jdlien/validator.git"
+    "url": "git+https://github.com/jdlien/validator-utils.git"
   },
   "publishConfig": {
     "access": "public"
