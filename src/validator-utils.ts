@@ -4,7 +4,7 @@
  * @format
  */
 
-type DateParts = { year: number; month: number; day: number }
+import { DateParts } from './types'
 
 export function isFormControl(el: any): boolean {
   return (

@@ -1,8 +1,7 @@
 import * as utils from '../src/validator-utils'
 // @ts-ignore
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-
-type DateParts = { year: number; month: number; day: number }
+import { DateParts } from '../src/types'
 
 describe('utils', () => {
   describe('isFormControl', () => {
