@@ -12,8 +12,14 @@ export default defineConfig({
       output: {
         entryFileNames: 'validator-utils.js',
         manualChunks: undefined,
+        // sourcemap: true,
       },
     },
+  },
+  ts: {
+    declaration: true,
+    declarationDir: 'dist',
+    declarationMap: true,
   },
   test: {
     environment: 'jsdom',
