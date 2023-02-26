@@ -24,7 +24,7 @@ Validator includes several utility functions that may be useful in your own code
 If you wish to use these, you may import the functions directly from the module as an object that contains all the functions:
 
 ```javascript
-import { validatorUtils } from '@jdlien/validator'
+import * as validatorUtils from '@jdlien/validator'
 // you could assign the functions you need to more convenient variables
 const { dateFormat, formatDateTime } = validatorUtils
 ```
