@@ -442,6 +442,14 @@ export function parseDateToString(value: string | Date, format?: string): string
   return formatDateTime(date, format)
 }
 
+export function parseDateTimeToString(value: string | Date, format?: string): string {
+  const dateTime = parseDateTime(value)
+  if (dateTime === null || isNaN(dateTime.getTime())) return ''
+  // if the format is undefined or has length of 0, set it to the default format
+  if (!format || format.length === 0) format = 'YYYY-MMM-DD h:mm A'
+  return formatDateTime(dateTime, format)
+}
+
 // Check if a the value of a specified input is a valid date and is in a specified date range
 export function isDate(value: string | Date): boolean {
   if (typeof value !== 'string' && !(value instanceof Date)) return false

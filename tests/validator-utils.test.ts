@@ -674,6 +674,40 @@ describe('utils', () => {
     })
   })
 
+  describe('parseDateTimeToString', () => {
+    it('should return a formatted string for a valid date and time', () => {
+      const value = '2022-01-31 2:01 P'
+      const result = utils.parseDateTimeToString(value)
+      expect(result).toEqual('2022-Jan-31 2:01 PM')
+    })
+
+    it('should handle invalid input', () => {
+      const value = 'abc'
+      const result = utils.parseDateTimeToString(value)
+      expect(result).toBe('')
+    })
+
+    it('should handle custom format', () => {
+      const value = '2022-01-01 01:02'
+      const format = 'YYYY/MM-DD HH:mm:ss'
+      const result = utils.parseDateTimeToString(value, format)
+      expect(result).toEqual('2022/01-01 01:02:00')
+    })
+
+    it('should handle custom format', () => {
+      const value = '2022-01-01 13:02'
+      const format = 'YYYY/MM-DD h:mm a'
+      const result = utils.parseDateTimeToString(value, format)
+      expect(result).toEqual('2022/01-01 1:02 pm')
+    })
+
+    it('should handle date input', () => {
+      const value = new Date(2022, 0, 1)
+      const result = utils.parseDateTimeToString(value)
+      expect(result).toEqual('2022-Jan-01 12:00 AM')
+    })
+  })
+
   describe('isDate', () => {
     it('should return true if the value is a valid date string', () => {
       expect(utils.isDate('2022-01-01')).toBe(true)
