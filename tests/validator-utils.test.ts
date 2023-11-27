@@ -556,6 +556,51 @@ describe('utils', () => {
     })
   }) // end parseTimeToString
 
+  describe('parseDateTime', () => {
+    it('should correctly parse valid date and time strings', () => {
+      // Example of standard date-time format
+      expect(utils.parseDateTime('January 1, 2021 14:30')).toEqual(new Date(2021, 0, 1, 14, 30))
+      // Example including meridiem
+      expect(utils.parseDateTime('February 15, 2020 1:45 pm')).toEqual(
+        new Date(2020, 1, 15, 13, 45)
+      )
+      // Example with different ordering
+      expect(utils.parseDateTime('20:00, July 4, 2022')).toEqual(new Date(2022, 6, 4, 20, 0))
+    })
+
+    it('should return null for invalid date-time strings', () => {
+      expect(utils.parseDateTime('Invalid Date String')).toBeNull()
+      expect(utils.parseDateTime('32 January 2021')).toBeNull()
+      expect(utils.parseDateTime('')).toBeNull()
+    })
+
+    it('should handle edge cases', () => {
+      // Handling date without time
+      expect(utils.parseDateTime('March 10, 2021')).toEqual(new Date(2021, 2, 10))
+      // Handling time without date
+      expect(utils.parseDateTime('23:59')).toEqual(new Date(new Date().setHours(23, 59, 0, 0)))
+      // Handling different delimiters
+      expect(utils.parseDateTime('2021/12/31 11:01 PM')).toEqual(new Date(2021, 11, 31, 23, 1))
+    })
+
+    it('should be robust against various formats', () => {
+      // Testing different formats and separators
+      expect(utils.parseDateTime('2021.03.25 18:30')).toEqual(new Date(2021, 2, 25, 18, 30))
+      expect(utils.parseDateTime('04-07-2022 7:00pm')).toEqual(new Date(2022, 3, 7, 19, 0))
+      expect(utils.parseDateTime('1 July 2021, 11:59 PM')).toEqual(new Date(2021, 6, 1, 23, 59))
+    })
+
+    // I found this quite difficult to support, so I'm nixing the shorthand time feature for now
+    /*
+    it('should handle 1-2 digit hour with meridiem', () => {
+      expect(utils.parseDateTime('2023.09.25 1P')).toEqual(new Date(2023, 8, 25, 13, 0))
+      expect(utils.parseDateTime('2023.09.25 10A')).toEqual(new Date(2023, 8, 25, 10, 0))
+
+      expect(utils.parseDateTime('2023.09.25 10 AM')).toEqual(new Date(2023, 8, 25, 10, 0))
+    })
+    */
+  })
+
   describe('formatDateTime', () => {
     it('should return a formatted string for a given date and format', () => {
       const date = new Date(2022, 0, 1, 12, 34, 56)
@@ -653,6 +698,39 @@ describe('utils', () => {
     })
   })
 
+  describe('isDateTime', () => {
+    it('should return true if the value is a valid date and time string', () => {
+      expect(utils.isDateTime('2022-01-01 1:00 PM')).toBe(true)
+    })
+
+    it('should return true if the value is a valid date string', () => {
+      expect(utils.isDateTime('2022-01-30')).toBe(true)
+    })
+
+    it('should return true if the value is a valid Date object', () => {
+      expect(utils.isDateTime(new Date('2022-01-01'))).toBe(true)
+    })
+
+    it('should return true if valid time string', () => {
+      expect(utils.isDateTime('2:00 AM')).toBe(true)
+    })
+
+    it('should return false if the value is not a sensible date or time', () => {
+      expect(utils.isDateTime('12')).toBe(false)
+      expect(utils.isDateTime('123')).toBe(false)
+    })
+
+    it('should return false if the value is an invalid Date object', () => {
+      vi.spyOn(Date, 'parse').mockImplementationOnce(() => NaN)
+      expect(utils.isDateTime(new Date('invalid date'))).toBe(false)
+    })
+
+    it('should return false if the value is not a date string or Date object', () => {
+      // @ts-ignore
+      expect(utils.isDateTime(123)).toBe(false)
+    })
+  })
+
   describe('isDateInRange', () => {
     const today = new Date()
     const tomorrow = new Date(today)
@@ -669,6 +747,29 @@ describe('utils', () => {
       expect(utils.isDateInRange(tomorrow, 'past')).toBe(false)
     })
   }) // end isDateInRange
+
+  describe('isMeridiem', () => {
+    it('should return true if the value is a valid meridiem string', () => {
+      expect(utils.isMeridiem('AM')).toBe(true)
+      expect(utils.isMeridiem('PM')).toBe(true)
+      expect(utils.isMeridiem('am')).toBe(true)
+      expect(utils.isMeridiem('pm')).toBe(true)
+      expect(utils.isMeridiem('A.M.')).toBe(true)
+      expect(utils.isMeridiem('p.m.')).toBe(true)
+      expect(utils.isMeridiem('p. m.')).toBe(true)
+      expect(utils.isMeridiem('a')).toBe(true)
+      expect(utils.isMeridiem('p')).toBe(true)
+      expect(utils.isMeridiem('A')).toBe(true)
+      expect(utils.isMeridiem('P')).toBe(true)
+    })
+
+    it('should return false if the value is not a valid meridiem string', () => {
+      expect(utils.isMeridiem('abc')).toBe(false)
+      expect(utils.isMeridiem('AMPM')).toBe(false)
+      expect(utils.isMeridiem('')).toBe(false)
+      expect(utils.isMeridiem(' ')).toBe(false)
+    })
+  }) // end isMeridiem
 
   describe('isTime', () => {
     it('should return true for valid time strings', () => {

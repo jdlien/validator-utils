@@ -257,11 +257,11 @@ export function guessDateParts(str: string): DateParts {
   }
 
   if (date.year && date.month && date.day) return date
-  /* c8 ignore next */
+  /* c8 ignore next 2 */
   throw new Error('Invalid Date')
 }
 
-// A simplified version of apps-date.ts's parseTime function.
+// Accepts a string representing a time and returns an object with hour, minute, and second properties
 export function parseTime(value: string): { hour: number; minute: number; second: number } | null {
   // if "now" or "today" is in the string, return the current time
   value = value.trim().toLowerCase()
@@ -331,6 +331,40 @@ export function parseTimeToString(value: string, format: string = 'h:mm A'): str
 
   return ''
 }
+
+// Parses a string and returns a date object with the most plausible date and time.
+// This requires a time with a colon, and is not as robust for times as parseTime
+export function parseDateTime(value: string | Date): Date | null {
+  if (value instanceof Date) return value
+  if (value.trim().length < 3) return null
+
+  let tokens = value.split(/[\s,]+/).filter((i) => i !== '')
+
+  // Extract time and meridiem
+  let timeToken = ''
+  let meridiemToken = ''
+  tokens.forEach((token) => {
+    if (/^\d{1,2}:\d{2}(:\d{2})?(.*)$/.test(token)) timeToken = token
+    else if (isMeridiem(token)) meridiemToken = token
+  })
+
+  // Remove extracted tokens from array
+  tokens = tokens.filter((token) => token !== timeToken && token !== meridiemToken)
+
+  const time = parseTime(timeToken + ' ' + meridiemToken) || { hour: 0, minute: 0, second: 0 }
+  const date = parseDate(tokens.join(' ').trim() || 'today')
+
+  if (!date || isNaN(date.getTime())) return null
+
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    time.hour,
+    time.minute,
+    time.second
+  )
+} // end parseDateTime
 
 // Accepts a date or date-like string and returns a formatted date string
 // Uses moment-compatible format strings
@@ -418,6 +452,17 @@ export function isDate(value: string | Date): boolean {
   return !isNaN(date.getTime())
 }
 
+// Check if the value of an input validates as a date with time
+export function isDateTime(value: string | Date): boolean {
+  if (typeof value !== 'string' && !(value instanceof Date)) return false
+
+  let dateTime = parseDateTime(value)
+
+  if (dateTime === null || dateTime === undefined) return false
+
+  return !isNaN(dateTime.getTime())
+}
+
 // Check if a date is within the specified range
 export function isDateInRange(date: Date, range: string): boolean {
   if (range === 'past' && date > new Date()) return false
@@ -426,6 +471,13 @@ export function isDateInRange(date: Date, range: string): boolean {
   // In the future, may add support for ranges like 'last 30 days' or 'next 3 months'
   // or specific dates like '2019-01-01 to 2019-12-31'
   return true
+}
+
+// Checks if a given string is a representation of a meridiem.
+export function isMeridiem(token: string): boolean {
+  // Normalize the token for easier comparison
+  const normalizedToken = token.toLowerCase().replace(/[.\s]/g, '')
+  return ['am', 'pm', 'a', 'p'].includes(normalizedToken)
 }
 
 export function isTime(value: string): boolean {
