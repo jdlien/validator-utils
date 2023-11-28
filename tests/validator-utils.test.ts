@@ -594,6 +594,7 @@ describe('utils', () => {
       expect(utils.parseDateTime('July 2 2022, 1:05 A')).toEqual(new Date(2022, 6, 2, 1, 5))
       expect(utils.parseDateTime('July 2 2022, 1:5')).toEqual(new Date(2022, 6, 2, 1, 5))
       expect(utils.parseDateTime('2023-Dec-31 5:00 P')).toEqual(new Date(2023, 11, 31, 17, 0))
+      expect(utils.parseDateTime('2023-Dec-31 5:0P')).toEqual(new Date(2023, 11, 31, 17, 0))
     })
 
     // I found this quite difficult to support, so I'm nixing the shorthand time feature for now
@@ -715,6 +716,13 @@ describe('utils', () => {
 
     it('should handle date input', () => {
       const value = '2024-01-01 20:01'
+      const format = 'YYYY-MMM-DD h:mm A'
+      const result = utils.parseDateTimeToString(value, format)
+      expect(result).toEqual('2024-Jan-01 8:01 PM')
+    })
+
+    it('should handle date input', () => {
+      const value = '2024-01-01 8:1 P'
       const format = 'YYYY-MMM-DD h:mm A'
       const result = utils.parseDateTimeToString(value, format)
       expect(result).toEqual('2024-Jan-01 8:01 PM')
