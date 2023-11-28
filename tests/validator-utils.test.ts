@@ -579,6 +579,7 @@ describe('utils', () => {
       expect(utils.parseDateTime('March 10, 2021')).toEqual(new Date(2021, 2, 10))
       // Handling time without date
       expect(utils.parseDateTime('23:59')).toEqual(new Date(new Date().setHours(23, 59, 0, 0)))
+      expect(utils.parseDateTime('11:07 PM')).toEqual(new Date(new Date().setHours(23, 7, 0, 0)))
       // Handling different delimiters
       expect(utils.parseDateTime('2021/12/31 11:01 PM')).toEqual(new Date(2021, 11, 31, 23, 1))
     })
@@ -588,6 +589,11 @@ describe('utils', () => {
       expect(utils.parseDateTime('2021.03.25 18:30')).toEqual(new Date(2021, 2, 25, 18, 30))
       expect(utils.parseDateTime('04-07-2022 7:00pm')).toEqual(new Date(2022, 3, 7, 19, 0))
       expect(utils.parseDateTime('1 July 2021, 11:59 PM')).toEqual(new Date(2021, 6, 1, 23, 59))
+      expect(utils.parseDateTime('July 2 2022, 1:5 P')).toEqual(new Date(2022, 6, 2, 13, 5))
+      expect(utils.parseDateTime('July 2 2022, 1:05 P')).toEqual(new Date(2022, 6, 2, 13, 5))
+      expect(utils.parseDateTime('July 2 2022, 1:05 A')).toEqual(new Date(2022, 6, 2, 1, 5))
+      expect(utils.parseDateTime('July 2 2022, 1:5')).toEqual(new Date(2022, 6, 2, 1, 5))
+      expect(utils.parseDateTime('2023-Dec-31 5:00 P')).toEqual(new Date(2023, 11, 31, 17, 0))
     })
 
     // I found this quite difficult to support, so I'm nixing the shorthand time feature for now

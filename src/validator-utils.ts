@@ -344,7 +344,7 @@ export function parseDateTime(value: string | Date): Date | null {
   let timeToken = ''
   let meridiemToken = ''
   tokens.forEach((token) => {
-    if (/^\d{1,2}:\d{2}(:\d{2})?(.*)$/.test(token)) timeToken = token
+    if (/^\d{1,2}:\d{1,2}(:\d{2})?(.*)$/.test(token)) timeToken = token
     else if (isMeridiem(token)) meridiemToken = token
   })
 
