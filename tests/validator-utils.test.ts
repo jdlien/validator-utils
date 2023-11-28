@@ -706,6 +706,13 @@ describe('utils', () => {
       const result = utils.parseDateTimeToString(value)
       expect(result).toEqual('2022-Jan-01 12:00 AM')
     })
+
+    it('should handle date input', () => {
+      const value = '2024-01-01 20:01'
+      const format = 'YYYY-MMM-DD h:mm A'
+      const result = utils.parseDateTimeToString(value, format)
+      expect(result).toEqual('2024-Jan-01 8:01 PM')
+    })
   })
 
   describe('isDate', () => {
