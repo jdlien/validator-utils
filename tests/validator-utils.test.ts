@@ -377,6 +377,15 @@ describe('utils', () => {
       })
     })
 
+    it('should return 12:00 PM if "noon" is passed', () => {
+      const result = utils.parseTime('noon')
+      expect(result).toMatchObject({
+        hour: 12,
+        minute: 0,
+        second: 0,
+      })
+    })
+
     it('should return a time if a 3 or 4 digit number is passed', () => {
       expect(utils.parseTime('123')).toMatchObject({
         hour: 1,
@@ -707,6 +716,10 @@ describe('utils', () => {
       // We don't care about milliseconds so zero them out
       const now = new Date().setMilliseconds(0)
       expect(utils.parseDateTime('now')).toEqual(new Date(now))
+    })
+
+    it('should handle "noon" as 12:00 PM', () => {
+      expect(utils.parseDateTime('noon')).toEqual(new Date(new Date().setHours(12, 0, 0, 0)))
     })
   })
 

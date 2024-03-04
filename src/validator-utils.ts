@@ -270,6 +270,8 @@ export function parseTime(value: string): { hour: number; minute: number; second
     return { hour: now.getHours(), minute: now.getMinutes(), second: now.getSeconds() }
   }
 
+  if (value === 'noon') return { hour: 12, minute: 0, second: 0 }
+
   // If there is a 3-4 digit number, assume it's a time and add a colon
   const timeParts = value.match(/(\d{3,4})/)
 
@@ -353,7 +355,7 @@ export function parseDateTime(value: string | Date): Date | null {
     const matches = token.match(/^(\d{1,4})([apAP]\.?[mM]?\.?)/)
     if (matches) timeToken = matches[0]
     else if (token.includes(':')) timeToken = token
-    else if (token === 'now') timeToken = token
+    else if (token === 'now' || token === 'noon') timeToken = token
 
     if (isMeridiem(token)) {
       meridiemToken = token
