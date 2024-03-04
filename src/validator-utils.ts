@@ -281,7 +281,7 @@ export function parseTime(value: string): { hour: number; minute: number; second
   }
 
   // Match a simple time without minutes or seconds and optional am/pm
-  const shortTimeRegex = new RegExp(/^(\d{1,2})(?::(\d{1,2}))?\s*(?:(a|p)m?)?$/i)
+  const shortTimeRegex = new RegExp(/^(\d{1,2})(?::(\d{1,2}))?\s*(?:(a|p)\.?m?\.?)?$/i)
   if (shortTimeRegex.test(value)) {
     const shortParts = value.match(shortTimeRegex)
     /* c8 ignore next */
@@ -338,21 +338,38 @@ export function parseDateTime(value: string | Date): Date | null {
   if (value instanceof Date) return value
   if (value.trim().length < 3) return null
 
+  // Replace a capital T surrounded by numbers with a space
+  value = value.replace(/(\d)T(\d)/, '$1 $2')
+
   let tokens = value.split(/[\s,]+/).filter((i) => i !== '')
 
   // Extract time and meridiem
+  let dateToken = ''
   let timeToken = ''
   let meridiemToken = ''
-  tokens.forEach((token) => {
-    if (/^\d{1,2}:\d{1,2}(:\d{2})?(.*)$/.test(token)) timeToken = token
-    else if (isMeridiem(token)) meridiemToken = token
+
+  tokens.forEach((token, index) => {
+    // Check for 1-4 digit number followed immediately by 'a' or 'p'
+    const matches = token.match(/^(\d{1,4})([apAP]\.?[mM]?\.?)/)
+    if (matches) timeToken = matches[0]
+    else if (token.includes(':')) timeToken = token
+    else if (token === 'now') timeToken = token
+
+    if (isMeridiem(token)) {
+      meridiemToken = token
+      // Assume the token before it is a time, if it exists
+      if (!timeToken && index > 0 && isTime(tokens[index - 1])) timeToken = tokens[index - 1]
+    }
   })
 
-  // Remove extracted tokens from array
-  tokens = tokens.filter((token) => token !== timeToken && token !== meridiemToken)
+  // If timeToken found, remove extracted tokens from array
+  if (timeToken) tokens = tokens.filter((token) => token !== timeToken && token !== meridiemToken)
+  else [dateToken, tokens] = findDateAndUnusedTokens(tokens)
 
-  const time = parseTime(timeToken + ' ' + meridiemToken) || { hour: 0, minute: 0, second: 0 }
-  const date = parseDate(tokens.join(' ').trim() || 'today')
+  // Determine the time from found time tokens or remaining tokens if we know the date
+  const timeInput = timeToken ? `${timeToken} ${meridiemToken}` : dateToken ? tokens.join(' ') : ''
+  const time = parseTime(timeInput) || { hour: 0, minute: 0, second: 0 }
+  const date = parseDate(dateToken ? dateToken : tokens.join(' ').trim() || 'today')
 
   if (!date || isNaN(date.getTime())) return null
 
@@ -365,6 +382,15 @@ export function parseDateTime(value: string | Date): Date | null {
     time.second
   )
 } // end parseDateTime
+
+// Returns the first date token found in an array of tokens and the remaining tokens
+function findDateAndUnusedTokens(tokens: string[]): [string, string[]] {
+  for (let numTokens = 3; numTokens > 0; numTokens--) {
+    const potentialDate = tokens.slice(0, numTokens).join(' ')
+    if (isDate(potentialDate)) return [potentialDate, tokens.slice(numTokens)]
+  }
+  return ['', tokens] // Return empty string and original tokens if no date found
+}
 
 // Accepts a date or date-like string and returns a formatted date string
 // Uses moment-compatible format strings
