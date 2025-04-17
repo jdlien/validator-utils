@@ -379,25 +379,13 @@ describe('utils', () => {
 
     it('should return 12:00 PM if "noon" is passed', () => {
       const result = utils.parseTime('noon')
-      expect(result).toMatchObject({
-        hour: 12,
-        minute: 0,
-        second: 0,
-      })
+      expect(result).toMatchObject({ hour: 12, minute: 0, second: 0 })
     })
 
     it('should return a time if a 3 or 4 digit number is passed', () => {
-      expect(utils.parseTime('123')).toMatchObject({
-        hour: 1,
-        minute: 23,
-        second: 0,
-      })
+      expect(utils.parseTime('123')).toMatchObject({ hour: 1, minute: 23, second: 0 })
 
-      expect(utils.parseTime('1234')).toMatchObject({
-        hour: 12,
-        minute: 34,
-        second: 0,
-      })
+      expect(utils.parseTime('1234')).toMatchObject({ hour: 12, minute: 34, second: 0 })
     })
 
     it('should return null if a non-time string is passed', () => {
@@ -409,131 +397,79 @@ describe('utils', () => {
     it('should return an object with hour, minute, and second properties', () => {
       const time = '12:34:56'
       const result = utils.parseTime(time)
-      expect(result).toMatchObject({
-        hour: 12,
-        minute: 34,
-        second: 56,
-      })
+      expect(result).toMatchObject({ hour: 12, minute: 34, second: 56 })
     })
 
     it('should handle leading zeros', () => {
       const time = '01:02:03'
       const result = utils.parseTime(time)
-      expect(result).toMatchObject({
-        hour: 1,
-        minute: 2,
-        second: 3,
-      })
+      expect(result).toMatchObject({ hour: 1, minute: 2, second: 3 })
     })
 
     it('should handle times with only hours and minutes', () => {
       const time = '12:34'
       const result = utils.parseTime(time)
-      expect(result).toMatchObject({
-        hour: 12,
-        minute: 34,
-        second: 0,
-      })
+      expect(result).toMatchObject({ hour: 12, minute: 34, second: 0 })
     })
 
     it('should handle times with only hours', () => {
       const time = '12'
       const result = utils.parseTime(time)
-      expect(result).toMatchObject({
-        hour: 12,
-        minute: 0,
-        second: 0,
-      })
+      expect(result).toMatchObject({ hour: 12, minute: 0, second: 0 })
     })
 
     it('should handle 24h time', () => {
       const time = '23:59:59'
       const result = utils.parseTime(time)
-      expect(result).toMatchObject({
-        hour: 23,
-        minute: 59,
-        second: 59,
-      })
+      expect(result).toMatchObject({ hour: 23, minute: 59, second: 59 })
     })
 
     it('should handle 12h times with meridiem', () => {
       const time = '12a'
       const result = utils.parseTime(time)
-      expect(result).toMatchObject({
-        hour: 0,
-        minute: 0,
-        second: 0,
-      })
+      expect(result).toMatchObject({ hour: 0, minute: 0, second: 0 })
     })
 
     it('should handle 12h times with meridiem', () => {
       const time = '1p'
       const result = utils.parseTime(time)
-      expect(result).toMatchObject({
-        hour: 13,
-        minute: 0,
-        second: 0,
-      })
+      expect(result).toMatchObject({ hour: 13, minute: 0, second: 0 })
     })
 
     it('should handle 12h times with uppercase meridiem', () => {
       const time = '1P'
       const result = utils.parseTime(time)
-      expect(result).toMatchObject({
-        hour: 13,
-        minute: 0,
-        second: 0,
-      })
+      expect(result).toMatchObject({ hour: 13, minute: 0, second: 0 })
     })
 
     it('should handle 12h times with meridiem', () => {
       const time = '2 p'
       const result = utils.parseTime(time)
-      expect(result).toMatchObject({
-        hour: 14,
-        minute: 0,
-        second: 0,
-      })
+      expect(result).toMatchObject({ hour: 14, minute: 0, second: 0 })
     })
 
     it('should handle 12h times with meridiem', () => {
       const time = '2 p.m.'
       const result = utils.parseTime(time)
-      expect(result).toMatchObject({
-        hour: 14,
-        minute: 0,
-        second: 0,
-      })
+      expect(result).toMatchObject({ hour: 14, minute: 0, second: 0 })
     })
 
     it('should handle 12h times with meridiem', () => {
       const time = '2 pm'
       const result = utils.parseTime(time)
-      expect(result).toMatchObject({
-        hour: 14,
-        minute: 0,
-        second: 0,
-      })
+      expect(result).toMatchObject({ hour: 14, minute: 0, second: 0 })
     })
 
     it('should handle 12h times with meridiem', () => {
       const time = '2:31 p'
       const result = utils.parseTime(time)
-      expect(result).toMatchObject({
-        hour: 14,
-        minute: 31,
-        second: 0,
-      })
+      expect(result).toMatchObject({ hour: 14, minute: 31, second: 0 })
     })
 
     it('should handle 12h times with meridiem', () => {
       const time = '11:31:29 p'
       const result = utils.parseTime(time)
-      expect(result).toMatchObject({
-        hour: 23,
-        minute: 31,
-        second: 29,
-      })
+      expect(result).toMatchObject({ hour: 23, minute: 31, second: 29 })
     })
 
     it('should handle invalid input', () => {
@@ -1457,23 +1393,22 @@ describe('utils', () => {
   }) // end isColor
 
   describe('parseColor', function () {
-    // TODO: Fix canvas impelementation in test environment and uncomment these two failing tests
-    // it('should return hex values for valid inputs', function () {
-    //   const validColors = [
-    //     '#f5f5f5',
-    //     'rgb(255, 99, 71)',
-    //     'hsl(120, 100%, 50%)',
-    //     'red',
-    //     'green',
-    //     'blue',
-    //   ]
-    //   const expectedColors = ['#f5f5f5', '#ff6347', '#00ff00', '#ff0000', '#008000', '#0000ff']
+    it('should return hex values for valid inputs', function () {
+      const validColors = [
+        '#f5f5f5',
+        'rgb(255, 99, 71)',
+        'hsl(120, 100%, 50%)',
+        'red',
+        'green',
+        'blue',
+      ]
+      const expectedColors = ['#f5f5f5', '#ff6347', '#00ff00', '#ff0000', '#008000', '#0000ff']
 
-    //   // TODO: I don't think handling transparent colors works very well
-    //   validColors.forEach((value, index) =>
-    //     expect(utils.parseColor(value)).toEqual(expectedColors[index])
-    //   )
-    // })
+      // TODO: I don't think handling transparent colors works very well
+      validColors.forEach((value, index) =>
+        expect(utils.parseColor(value)).toEqual(expectedColors[index])
+      )
+    })
 
     it('should return "transparent" for transparent', () => {
       expect(utils.parseColor('transparent')).toEqual('transparent')
@@ -1483,11 +1418,11 @@ describe('utils', () => {
       expect(utils.parseColor('currentColor')).toEqual('currentcolor')
     })
 
-    // it('should use colorCache for known values', () => {
-    //   const colorCache = new Map<string, string>()
-    //   colorCache.set('red', '#ff0000')
-    //   expect(utils.parseColor('red')).toBe('#ff0000')
-    // })
+    it('should use colorCache for known values', () => {
+      const colorCache = new Map<string, string>()
+      colorCache.set('red', '#ff0000')
+      expect(utils.parseColor('red')).toBe('#ff0000')
+    })
   }) // end parseColor
 
   describe('normalizeValidationResult', () => {
