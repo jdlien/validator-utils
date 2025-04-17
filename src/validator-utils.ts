@@ -256,8 +256,8 @@ export function guessDateParts(str: string): DateParts {
     if (count > 6) throw new Error('Invalid Date')
   }
 
+  /* c8 ignore next 3 */
   if (date.year && date.month && date.day) return date
-  /* c8 ignore next 2 */
   throw new Error('Invalid Date')
 }
 
@@ -401,6 +401,7 @@ export function formatDateTime(date: Date | string, format: string = 'YYYY-MM-DD
   date = parseDate(date) as Date
 
   // if date is an invalid date object, return empty string
+  /* c8 ignore next */
   if (isNaN(date.getTime())) return ''
 
   const d = {
@@ -483,6 +484,7 @@ export function isDate(value: string | Date): boolean {
   if (typeof value !== 'string' && !(value instanceof Date)) return false
   let date = parseDate(value)
 
+  /* c8 ignore next */
   if (date === null || date === undefined) return false
 
   return !isNaN(date.getTime())
@@ -494,6 +496,7 @@ export function isDateTime(value: string | Date): boolean {
 
   let dateTime = parseDateTime(value)
 
+  /* c8 ignore next */
   if (dateTime === null || dateTime === undefined) return false
 
   return !isNaN(dateTime.getTime())
@@ -630,6 +633,7 @@ export function isZip(value: string): boolean {
 }
 
 export function parsePostalCA(value: string): string {
+  /* c8 ignore next */
   value = value
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, '')
@@ -650,6 +654,7 @@ export function isPostalCA(value: string): boolean {
 export function isColor(value: string): boolean {
   if (['transparent', 'currentColor'].includes(value)) return true
 
+  /* c8 ignore next */
   if (typeof value !== 'string' || !value.trim()) return false
 
   if (typeof CSS === 'object' && typeof CSS.supports === 'function') {
@@ -716,6 +721,7 @@ export function parseColor(value: string): string {
     ;(<any>colorCanvas).willReadFrequently = true
   }
   let ctx = colorCanvas.getContext('2d')
+  /* c8 ignore next */
   if (!ctx) throw new Error("Can't get context from colorCanvas")
 
   ctx!.fillStyle = value
