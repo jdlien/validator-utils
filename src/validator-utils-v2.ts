@@ -304,6 +304,24 @@ export function isDateTime(value: string | Date): boolean {
   return dt !== null && !isNaN(dt.getTime())
 }
 
+export function parseDateToString(value: string | Date, format = 'YYYY-MMM-DD'): string {
+  const date = parseDate(value)
+  return isNaN(date.getTime()) ? '' : formatDateTime(date, format)
+}
+
+export function parseDateTimeToString(value: string | Date, format = 'YYYY-MMM-DD h:mm A'): string {
+  const dt = parseDateTime(value)
+  return dt && !isNaN(dt.getTime()) ? formatDateTime(dt, format) : ''
+}
+
+export function parseTimeToString(value: string, format = 'h:mm A'): string {
+  const t = parseTime(value)
+  if (!t) return ''
+  const d = new Date()
+  d.setHours(t.hour, t.minute, t.second, 0)
+  return formatDateTime(d, format)
+}
+
 // ============ UTILITY EXPORTS ============
 
 const MONTH_DICT: Record<string, number> = {

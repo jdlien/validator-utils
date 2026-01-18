@@ -87,38 +87,6 @@ function momentToFPFormat(format: string): string {
 }
 ```
 
-**`parseDateToString`** - Use `formatDateTime(parseDate(value), format)` instead:
-
-```typescript
-// Old: parseDateToString(value, 'YYYY-MMM-DD')
-// New:
-const date = parseDate(value)
-const result = isNaN(date.getTime()) ? '' : formatDateTime(date, 'YYYY-MMM-DD')
-```
-
-**`parseDateTimeToString`** - Use `formatDateTime(parseDateTime(value), format)` instead:
-
-```typescript
-// Old: parseDateTimeToString(value, 'YYYY-MMM-DD h:mm A')
-// New:
-const dt = parseDateTime(value)
-const result = dt && !isNaN(dt.getTime()) ? formatDateTime(dt, 'YYYY-MMM-DD h:mm A') : ''
-```
-
-**`parseTimeToString`** - Use `parseTime()` with `formatDateTime()`:
-
-```typescript
-// Old: parseTimeToString(value, 'h:mm A')
-// New:
-const t = parseTime(value)
-let result = ''
-if (t) {
-  const d = new Date()
-  d.setHours(t.hour, t.minute, t.second, 0)
-  result = formatDateTime(d, 'h:mm A')
-}
-```
-
 **`guessDateParts`** and **`guessDatePart`** - Use `parseDate()` directly:
 
 ```typescript

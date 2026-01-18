@@ -479,7 +479,7 @@ describe('utils', () => {
     })
   }) // end parseTime
 
-  describe.skip('parseTimeToString - removed in V2', () => {
+  describe('parseTimeToString', () => {
     it('should return a formatted string for a valid time', () => {
       const value = '12:34:56'
       const result = utils.parseTimeToString(value)
@@ -705,7 +705,7 @@ describe('utils', () => {
     })
   }) // end formatDateTime
 
-  describe.skip('parseDateToString - removed in V2', () => {
+  describe('parseDateToString', () => {
     it('should return a formatted string for a valid date', () => {
       const value = '2022-01-31'
       const result = utils.parseDateToString(value)
@@ -732,7 +732,7 @@ describe('utils', () => {
     })
   })
 
-  describe.skip('parseDateTimeToString - removed in V2', () => {
+  describe('parseDateTimeToString', () => {
     it('should return a formatted string for a valid date and time', () => {
       const value = '2022-01-31 2:01 P'
       const result = utils.parseDateTimeToString(value)
