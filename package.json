@@ -2,6 +2,7 @@
   "name": "@jdlien/validator-utils",
   "version": "1.2.8",
   "type": "module",
+  "packageManager": "pnpm@10.11.0",
   "module": "dist/validator-utils.js",
   "main": "dist/validator-utils.js",
   "types": "dist/validator-utils.d.ts",
@@ -48,5 +49,8 @@
     "vite": "^7.3.1",
     "vitest": "^4.0.17"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "pnpm": {
+    "onlyBuiltDependencies": ["canvas", "esbuild"]
+  }
 }
