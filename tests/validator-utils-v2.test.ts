@@ -65,7 +65,7 @@ describe('utils', () => {
     })
   }) // end isType
 
-  describe('momentToFPFormat', () => {
+  describe.skip('momentToFPFormat - removed in V2', () => {
     it('should correctly convert YYYY to Y', () => {
       expect(utils.momentToFPFormat('YYYY-MM-DD')).toEqual('Y-m-d')
     })
@@ -312,13 +312,13 @@ describe('utils', () => {
     })
   })
 
-  describe('guessDatePart', () => {
+  describe.skip('guessDatePart - removed in V2', () => {
     it('should return empty array if token cannot be valid month, day, or year', () => {
       expect(utils.guessDatePart(-1)).toEqual([])
     })
   })
 
-  describe('guessDateParts', () => {
+  describe.skip('guessDateParts - removed in V2', () => {
     it('should return a valid date object given a valid date string', () => {
       const str = '25 12 2022'
       const result: DateParts = { day: 25, month: 12, year: 2022 }
@@ -479,7 +479,7 @@ describe('utils', () => {
     })
   }) // end parseTime
 
-  describe('parseTimeToString', () => {
+  describe.skip('parseTimeToString - removed in V2', () => {
     it('should return a formatted string for a valid time', () => {
       const value = '12:34:56'
       const result = utils.parseTimeToString(value)
@@ -705,7 +705,7 @@ describe('utils', () => {
     })
   }) // end formatDateTime
 
-  describe('parseDateToString', () => {
+  describe.skip('parseDateToString - removed in V2', () => {
     it('should return a formatted string for a valid date', () => {
       const value = '2022-01-31'
       const result = utils.parseDateToString(value)
@@ -732,7 +732,7 @@ describe('utils', () => {
     })
   })
 
-  describe('parseDateTimeToString', () => {
+  describe.skip('parseDateTimeToString - removed in V2', () => {
     it('should return a formatted string for a valid date and time', () => {
       const value = '2022-01-31 2:01 P'
       const result = utils.parseDateTimeToString(value)

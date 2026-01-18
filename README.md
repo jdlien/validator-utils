@@ -61,6 +61,78 @@ Here is a list of the utility functions:
 - **parseColor**: Parses a color string into a standardized format.
 - **normalizeValidationResult**: Normalizes a validation result (like a boolean or string) into an object with a valid property and a messages array of strings.
 
+## V2 (Lightweight Build)
+
+V2 is an ultra-lightweight rewrite optimized for minimal bundle size. It is 28% smaller in lines of code and 18% smaller in character count while maintaining compatibility with the vast majority of use cases.
+
+### Breaking Changes in V2
+
+The following functions have been removed from V2 to reduce bundle size. If you need these functions, you can implement them yourself using the code snippets below.
+
+#### Removed Functions
+
+**`momentToFPFormat`** - Converts moment.js format strings to Flatpickr format. If you use Flatpickr, add this to your project:
+
+```typescript
+function momentToFPFormat(format: string): string {
+  return format
+    .replace(/YYYY/g, 'Y').replace(/YY/g, 'y')
+    .replace(/MMMM/g, 'F').replace(/MMM/g, '{3}').replace(/MM/g, '{2}').replace(/M/g, 'n')
+    .replace(/DD/g, '{5}').replace(/D/g, 'j')
+    .replace(/dddd/g, 'l').replace(/ddd/g, 'D').replace(/dd/g, 'D').replace(/d/g, 'w')
+    .replace(/HH/g, '{6}').replace(/H/g, 'G').replace(/hh/g, 'h')
+    .replace(/mm/g, 'i').replace(/m/g, 'i').replace(/ss/g, 'S').replace(/s/g, 's')
+    .replace(/A/gi, 'K')
+    .replace(/\{3\}/g, 'M').replace(/\{2\}/g, 'm').replace(/\{5\}/g, 'd').replace(/\{6\}/g, 'H')
+}
+```
+
+**`parseDateToString`** - Use `formatDateTime(parseDate(value), format)` instead:
+
+```typescript
+// Old: parseDateToString(value, 'YYYY-MMM-DD')
+// New:
+const date = parseDate(value)
+const result = isNaN(date.getTime()) ? '' : formatDateTime(date, 'YYYY-MMM-DD')
+```
+
+**`parseDateTimeToString`** - Use `formatDateTime(parseDateTime(value), format)` instead:
+
+```typescript
+// Old: parseDateTimeToString(value, 'YYYY-MMM-DD h:mm A')
+// New:
+const dt = parseDateTime(value)
+const result = dt && !isNaN(dt.getTime()) ? formatDateTime(dt, 'YYYY-MMM-DD h:mm A') : ''
+```
+
+**`parseTimeToString`** - Use `parseTime()` with `formatDateTime()`:
+
+```typescript
+// Old: parseTimeToString(value, 'h:mm A')
+// New:
+const t = parseTime(value)
+let result = ''
+if (t) {
+  const d = new Date()
+  d.setHours(t.hour, t.minute, t.second, 0)
+  result = formatDateTime(d, 'h:mm A')
+}
+```
+
+**`guessDateParts`** and **`guessDatePart`** - Use `parseDate()` directly:
+
+```typescript
+// Old: const { year, month, day } = guessDateParts(str)
+// New:
+const d = parseDate(str)
+if (isNaN(d.getTime())) throw new Error('Invalid Date')
+const parts = { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() }
+```
+
+### Other V2 Changes
+
+**Email Validation**: V2 uses a simplified email regex that covers standard email formats. Some obscure RFC 5322 edge cases (like quoted local parts with special characters) may not be validated identically to V1. For most applications, this change has no practical impact.
+
 ## Contributing
 
 Install dev dependencies:

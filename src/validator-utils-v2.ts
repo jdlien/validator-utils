@@ -304,25 +304,7 @@ export function isDateTime(value: string | Date): boolean {
   return dt !== null && !isNaN(dt.getTime())
 }
 
-export function parseDateToString(value: string | Date, format = 'YYYY-MMM-DD'): string {
-  const date = parseDate(value)
-  return isNaN(date.getTime()) ? '' : formatDateTime(date, format)
-}
-
-export function parseDateTimeToString(value: string | Date, format = 'YYYY-MMM-DD h:mm A'): string {
-  const dt = parseDateTime(value)
-  return dt && !isNaN(dt.getTime()) ? formatDateTime(dt, format) : ''
-}
-
-export function parseTimeToString(value: string, format = 'h:mm A'): string {
-  const t = parseTime(value)
-  if (!t) return ''
-  const d = new Date()
-  d.setHours(t.hour, t.minute, t.second, 0)
-  return formatDateTime(d, format)
-}
-
-// ============ UTILITY EXPORTS (for compatibility) ============
+// ============ UTILITY EXPORTS ============
 
 const MONTH_DICT: Record<string, number> = {
   ja: 0, en: 0, fe: 1, fé: 1, ap: 3, ab: 3, av: 3, mai: 4, juin: 5, juil: 6,
@@ -340,28 +322,6 @@ export function monthToNumber(str: string | number): number {
   throw new Error('Invalid month name: ' + str)
 }
 
-export function guessDatePart(num: number, known: (string | null)[] = []): string[] {
-  const unknown = (arr: string[]) => arr.filter(i => !known.includes(i))
-  if (num === 0 || num > 31) return unknown(['y'])
-  if (num > 12) return unknown(['d', 'y'])
-  if (num >= 1 && num <= 12) return unknown(['m', 'd', 'y'])
-  return []
-}
-
-export function guessDateParts(str: string): { year: number; month: number; day: number } {
-  const tokens = str.split(/[\s-/:.,]+/).filter(i => i !== '')
-  // Check for NaN tokens first (for console.error behavior compatibility)
-  for (const token of tokens) {
-    if (!/^[a-zA-Zé]+$/.test(token) && !/^'\d\d$/.test(token) && !/^\d+$/.test(token)) {
-      console.error(`not date because ${token} isNaN`)
-      throw new Error('Invalid Date')
-    }
-  }
-  const d = parseDate(str)
-  if (isNaN(d.getTime())) throw new Error('Invalid Date')
-  return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() }
-}
-
 export function isDateInRange(date: Date, range: string): boolean {
   if (range === 'past' && date > new Date()) return false
   if (range === 'future' && date.getTime() < new Date().setHours(0, 0, 0, 0)) return false
@@ -377,20 +337,6 @@ export function isFormControl(el: any): boolean {
 export function isType(el: HTMLInputElement | HTMLTextAreaElement, types: string | string[]): boolean {
   if (typeof types === 'string') types = [types]
   return types.includes(el.dataset.type || '') || types.includes(el.type)
-}
-
-// ============ FORMAT CONVERSION ============
-
-export function momentToFPFormat(format: string): string {
-  return format
-    .replace(/YYYY/g, 'Y').replace(/YY/g, 'y')
-    .replace(/MMMM/g, 'F').replace(/MMM/g, '{3}').replace(/MM/g, '{2}').replace(/M/g, 'n')
-    .replace(/DD/g, '{5}').replace(/D/g, 'j')
-    .replace(/dddd/g, 'l').replace(/ddd/g, 'D').replace(/dd/g, 'D').replace(/d/g, 'w')
-    .replace(/HH/g, '{6}').replace(/H/g, 'G').replace(/hh/g, 'h')
-    .replace(/mm/g, 'i').replace(/m/g, 'i').replace(/ss/g, 'S').replace(/s/g, 's')
-    .replace(/A/gi, 'K')
-    .replace(/\{3\}/g, 'M').replace(/\{2\}/g, 'm').replace(/\{5\}/g, 'd').replace(/\{6\}/g, 'H')
 }
 
 // ============ EMAIL VALIDATION ============
