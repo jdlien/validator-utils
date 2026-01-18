@@ -38,15 +38,15 @@
   },
   "homepage": "https://github.com/jdlien/validator-utils#readme",
   "devDependencies": {
-    "@types/jsdom": "^21.1.0",
-    "@vitest/coverage-v8": "^3.1.1",
+    "@types/jsdom": "^27.0.0",
+    "@vitest/coverage-v8": "^4.0.17",
     "canvas": "^3.0.0",
-    "jsdom": "^26.1.0",
+    "jsdom": "^27.4.0",
     "jsdom-global": "^3.0.2",
     "prettier": "^3.0.1",
     "typescript": "^5.1.6",
-    "vite": "^6.3.1",
-    "vitest": "^3.1.1"
+    "vite": "^7.3.1",
+    "vitest": "^4.0.17"
   },
   "sideEffects": false
 }
