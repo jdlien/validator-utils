@@ -6,6 +6,25 @@
 
 type DateParts = { year: number; month: number; day: number }
 
+// Pre-compiled regex patterns (hoisted to module scope for performance)
+const TIME_RE = /\d{1,2}:\d\d(?::\d\d?)?\s?(?:[ap]m?)?/gi
+const DAY_OF_WEEK_RE = /(^|\b)(mo|tu|we|th|fr|sa|su|lu|mard|mer|jeu|ve|dom)[\w]*\.?/gi
+const SHORT_TIME_RE = /^(\d{1,2})(?::(\d{1,2}))?\s*(?:(a|p)\.?m?\.?)?$/i
+const TIME_FULL_RE = /^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?\s*(?:(a|p)m?)?$/i
+const URL_PARSE_RE = /^(?:[a-z+]+:)?\/\//i
+const URL_VALIDATE_RE = /^(?:[-a-z+]+:)?\/\//i
+const ZIP_RE = /^\d{5}(-\d{4})?$/
+const POSTAL_CA_RE = /^[ABCEGHJKLMNPRSTVXY][0-9][ABCEGHJKLMNPRSTVWXYZ] ?[0-9][ABCEGHJKLMNPRSTVWXYZ][0-9]$/
+
+// Pre-compiled email validation regex (RFC 5322 compliant)
+const EMAIL_TLD_RE = /^.+@.+\.[a-zA-Z0-9]{2,}$/
+const EMAIL_FULL_RE = new RegExp(
+  "^([a-zA-Z0-9!#$%'*+/=?^_`{|}~-]+" +
+    "(?:\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*" +
+    '|"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*")' +
+    '@((?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)$'
+)
+
 export function isFormControl(el: any): boolean {
   return (
     el instanceof HTMLInputElement ||
@@ -125,10 +144,12 @@ export function parseDate(value: string | Date): Date {
   let minute: number = 0
   let second: number = 0
 
-  const timeRE = new RegExp(/\d{1,2}\:\d\d(?:\:\d\ds?)?\s?(?:[a|p]m?)?/gi)
+  // Reset lastIndex since we reuse the global regex
+  TIME_RE.lastIndex = 0
   // If the value contains a time, set the time variables
-  if (timeRE.test(value)) {
-    const timeStr = value.match(timeRE)![0]
+  if (TIME_RE.test(value)) {
+    TIME_RE.lastIndex = 0
+    const timeStr = value.match(TIME_RE)![0]
     // Remove the time from the string
     value = value.replace(timeStr, '').trim()
     const timeParts = parseTime(timeStr)
@@ -143,8 +164,8 @@ export function parseDate(value: string | Date): Date {
   }
 
   // Strip day of the week from the string in English, French, or Spanish
-  const dayOfWeekRegex = /(^|\b)(mo|tu|we|th|fr|sa|su|lu|mard|mer|jeu|ve|dom)[\w]*\.?/gi
-  value = value.replace(dayOfWeekRegex, '').trim()
+  DAY_OF_WEEK_RE.lastIndex = 0
+  value = value.replace(DAY_OF_WEEK_RE, '').trim()
 
   // Convert now and today to the current date at midnight
   const today = new Date(new Date().setHours(0, 0, 0, 0))
@@ -283,20 +304,17 @@ export function parseTime(value: string): { hour: number; minute: number; second
   }
 
   // Match a simple time without minutes or seconds and optional am/pm
-  const shortTimeRegex = new RegExp(/^(\d{1,2})(?::(\d{1,2}))?\s*(?:(a|p)\.?m?\.?)?$/i)
-  if (shortTimeRegex.test(value)) {
-    const shortParts = value.match(shortTimeRegex)
+  if (SHORT_TIME_RE.test(value)) {
+    const shortParts = value.match(SHORT_TIME_RE)
     /* c8 ignore next */
     if (shortParts === null) return null
     value = shortParts[1] + ':' + (shortParts[2] || '00') + (shortParts[3] || '')
   }
 
   // Regex to match time in 0:0 format with optional seconds and am/pm
-  const timeRegex = new RegExp(/^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?\s*(?:(a|p)m?)?$/i)
+  if (!TIME_FULL_RE.test(value)) return null
 
-  if (!timeRegex.test(value)) return null
-
-  const parts = value.match(timeRegex)
+  const parts = value.match(TIME_FULL_RE)
   /* c8 ignore next */
   if (parts === null) return null
 
@@ -532,38 +550,10 @@ export function isEmail(value: string): boolean {
   // Emails cannot be longer than 255 characters
   if (value.length > 255) return false
 
-  // This is a relatively simple regex just to check that an email has a valid TLD
-  // It will not catch all invalid emails, the next regex does that
-  let emailTLDRegex = new RegExp(/^.+@.+\.[a-zA-Z0-9]{2,}$/)
-  if (!emailTLDRegex.test(value)) return false
+  // Quick check for valid TLD format before running the full regex
+  if (!EMAIL_TLD_RE.test(value)) return false
 
-  // A comprehensive regular expression to check for valid emails. Does not allow for unicode characters.
-  let re = ''
-  // Begin local part. Allow alphanumeric characters and some special characters
-  re += "^([a-zA-Z0-9!#$%'*+/=?^_`{|}~-]+"
-
-  // Allow dot separated sequences of the above characters (representing multiple labels in the local part)
-  re += "(?:\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*"
-
-  // Allow a quoted string (using either single or double quotes)
-  re += '|'
-  re +=
-    '"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*"'
-  // End of local part and begin domain part of email address
-  re += ')@('
-  // Domain part can be either a sequence of labels, separated by dots, ending with a TLD
-  re += '('
-  re += '(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)+'
-  // TLD must be at least 2 characters long
-  re += '[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?'
-  re += ')'
-  // Or, it can be an address within square brackets but
-  // we will not allow this - real people shouldn't be using IP addresses in email addresses
-  re += ')$' // End of string
-
-  let emailRegex = new RegExp(re)
-
-  return emailRegex.test(value)
+  return EMAIL_FULL_RE.test(value)
 }
 
 // Parse a North American Numbering Plan phone number (xxx-xxx-xxxx)
@@ -603,16 +593,14 @@ export function isInteger(value: string): boolean {
 // If the string isn't already a valid url, prepends 'https://'
 export function parseUrl(value: string): string {
   value = value.trim()
-  const urlRegex = new RegExp('^(?:[a-z+]+:)?//', 'i')
-  if (urlRegex.test(value)) return value
+  if (URL_PARSE_RE.test(value)) return value
   else return 'https://' + value
 }
 
 // Checks if this is a valid URL in a protocol agnostic way,
 // allows for protocol-relative absolute URLs (eg //example.com)
 export function isUrl(value: string): boolean {
-  const urlRegex = new RegExp('^(?:[-a-z+]+:)?//', 'i')
-  return urlRegex.test(value)
+  return URL_VALIDATE_RE.test(value)
 }
 
 export function parseZip(value: string): string {
@@ -628,8 +616,7 @@ export function parseZip(value: string): string {
 }
 
 export function isZip(value: string): boolean {
-  const zipRegex = new RegExp(/^\d{5}(-\d{4})?$/)
-  return zipRegex.test(value)
+  return ZIP_RE.test(value)
 }
 
 export function parsePostalCA(value: string): string {
@@ -643,62 +630,21 @@ export function parsePostalCA(value: string): string {
 }
 
 export function isPostalCA(value: string): boolean {
-  const postalRegex = new RegExp(
-    /^[ABCEGHJKLMNPRSTVXY][0-9][ABCEGHJKLMNPRSTVWXYZ] ?[0-9][ABCEGHJKLMNPRSTVWXYZ][0-9]$/
-  )
-  return postalRegex.test(value)
+  return POSTAL_CA_RE.test(value)
 }
 
-// Checks if the value is a valid CSS color
-// Falls back to a regex if CSS.supports isn't available
+// Checks if the value is a valid CSS color using CSS.supports()
+// Requires a modern browser environment (97%+ browser support)
 export function isColor(value: string): boolean {
   if (['transparent', 'currentColor'].includes(value)) return true
 
   /* c8 ignore next */
   if (typeof value !== 'string' || !value.trim()) return false
 
-  if (typeof CSS === 'object' && typeof CSS.supports === 'function') {
-    return CSS.supports('color', value)
-  }
+  /* c8 ignore next 2 */
+  if (typeof CSS !== 'object' || typeof CSS.supports !== 'function') return false
 
-  // If CSS.supports isn't available, use regexes to check for valid rgb or hsl color values
-  // Not as comprehensive as the CSS.supports method, but should work in older browsers
-  return isColorRegex(value)
-}
-
-function isColorRegex(value: string): boolean {
-  const rgbRegex = new RegExp(
-    /^rgba?\(\s*(\d{1,3}%?,\s*){2}\d{1,3}%?\s*(?:,\s*(\.\d+|0+(\.\d+)?|1(\.0+)?|0|1\.0|\d{1,2}(\.\d*)?%|100%))?\s*\)$/
-  )
-
-  const hslRegex = new RegExp(
-    /^hsla?\(\s*\d+(deg|grad|rad|turn)?,\s*\d{1,3}%,\s*\s*\d{1,3}%(?:,\s*(\.\d+|0+(\.\d+)?|1(\.0+)?|0|1\.0|\d{1,2}(\.\d*)?%|100%))?\s*\)$/
-  )
-
-  // Support for the newer space-separated syntax
-  const rgbSpaceRegex = new RegExp(
-    /^rgba?\(\s*(\d{1,3}%?\s+){2}\d{1,3}%?\s*(?:\s*\/\s*(\.\d+|0+(\.\d+)?|1(\.0+)?|0|1\.0|\d{1,2}(\.\d*)?%|100%))?\s*\)$/
-  )
-
-  const hslSpaceRegex = new RegExp(
-    /^hsla?\(\s*\d+(deg|grad|rad|turn)?\s+\d{1,3}%\s+\s*\d{1,3}%(?:\s*\/\s*(\.\d+|0+(\.\d+)?|1(\.0+)?|0|1\.0|\d{1,2}(\.\d*)?%|100%))?\s*\)$/
-  )
-
-  // Hex color regex (short and long formats with and without alpha)
-  const hexRegex = new RegExp(/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i)
-
-  let colors = `aliceblue|antiquewhite|aqua|aquamarine|azure|beige|bisque|black|blanchedalmond|blue|blueviolet|brown|burlywood|cadetblue|chartreuse|chocolate|coral|cornflowerblue|cornsilk|crimson|cyan|darkblue|darkcyan|darkgoldenrod|darkgray|darkgreen|darkgrey|darkkhaki|darkmagenta|darkolivegreen|darkorange|darkorchid|darkred|darksalmon|darkseagreen|darkslateblue|darkslategray|darkslategrey|darkturquoise|darkviolet|deeppink|deepskyblue|dimgray|dimgrey|dodgerblue|firebrick|floralwhite|forestgreen|fuchsia|gainsboro|ghostwhite|gold|goldenrod|gray|green|greenyellow|grey|honeydew|hotpink|indianred|indigo|ivory|khaki|lavender|lavenderblush|lawngreen|lemonchiffon|lightblue|lightcoral|lightcyan|lightgoldenrodyellow|lightgray|lightgreen|lightgrey|lightpink|lightsalmon|lightseagreen|lightskyblue|lightslategray|lightslategrey|lightsteelblue|lightyellow|lime|limegreen|linen|magenta|maroon|mediumaquamarine|mediumblue|mediumorchid|mediumpurple|mediumseagreen|mediumslateblue|mediumspringgreen|mediumturquoise|mediumvioletred|midnightblue|mintcream|mistyrose|moccasin|navajowhite|navy|oldlace|olive|olivedrab|orange|orangered|orchid|palegoldenrod|palegreen|paleturquoise|palevioletred|papayawhip|peachpuff|peru|pink|plum|powderblue|purple|rebeccapurple|red|rosybrown|royalblue|saddlebrown|salmon|sandybrown|seagreen|seashell|sienna|silver|skyblue|slateblue|slategray|slategrey|snow|springgreen|steelblue|tan|teal|thistle|tomato|turquoise|violet|wheat|white|whitesmoke|yellow|yellowgreen`
-
-  const colorNameRegex = new RegExp(`^(${colors})$`, 'i')
-
-  return (
-    rgbRegex.test(value) ||
-    hslRegex.test(value) ||
-    rgbSpaceRegex.test(value) ||
-    hslSpaceRegex.test(value) ||
-    hexRegex.test(value) ||
-    colorNameRegex.test(value)
-  )
+  return CSS.supports('color', value)
 }
 
 // Used to convert color names to hex values

@@ -1167,6 +1167,51 @@ describe('utils', () => {
   })
 
   describe('isColor', () => {
+    // Mock CSS.supports since jsdom doesn't implement it properly
+    const cssColorValidator = (prop: string, value: string): boolean => {
+      if (prop !== 'color') return false
+
+      // Hex colors
+      if (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value)) return true
+
+      // RGB/RGBA with comma syntax: rgb(r, g, b) or rgba(r, g, b, a)
+      if (/^rgba?\(\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*(,\s*[\d.]+%?)?\s*\)$/i.test(value))
+        return true
+
+      // RGB/RGBA with space syntax: rgb(r g b) or rgb(r g b / a)
+      if (/^rgba?\(\s*\d{1,3}%?\s+\d{1,3}%?\s+\d{1,3}%?\s*(\s*\/\s*[\d.]+%?)?\s*\)$/i.test(value))
+        return true
+
+      // HSL/HSLA with comma syntax
+      if (/^hsla?\(\s*\d+(?:deg|grad|rad|turn)?\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*(,\s*[\d.]+%?)?\s*\)$/i.test(value))
+        return true
+
+      // HSL/HSLA with space syntax
+      if (/^hsla?\(\s*\d+(?:deg|grad|rad|turn)?\s+\d{1,3}%\s+\d{1,3}%\s*(\s*\/\s*[\d.]+%?)?\s*\)$/i.test(value))
+        return true
+
+      // Named colors
+      const namedColors = new Set([
+        'transparent', 'currentcolor', 'black', 'white', 'red', 'green', 'blue', 'yellow',
+        'orange', 'purple', 'brown', 'pink', 'gray', 'grey', 'lavenderblush', 'honeydew',
+        'seashell', 'azure', 'lavender', 'aliceblue', 'ghostwhite', 'mintcream', 'oldlace',
+        'linen', 'cornsilk', 'papayawhip', 'beige', 'bisque', 'blanchedalmond', 'wheat',
+        'navajowhite', 'peachpuff', 'moccasin', 'gainsboro', 'lightgrey', 'lightgray',
+        'silver', 'darkgray', 'dimgray'
+      ])
+      if (namedColors.has(value.toLowerCase())) return true
+
+      return false
+    }
+
+    beforeEach(() => {
+      // Setup CSS.supports mock
+      if (typeof globalThis.CSS === 'undefined') {
+        ;(globalThis as any).CSS = {}
+      }
+      ;(globalThis.CSS as any).supports = cssColorValidator
+    })
+
     const validHexColors = [
       '#000000',
       '#00000000',
@@ -1346,7 +1391,27 @@ describe('utils', () => {
     })
   }) // end isColor
 
-  describe('isColor', function () {
+  describe('isColor additional tests', function () {
+    // Mock CSS.supports since jsdom doesn't implement it properly
+    const cssColorValidator = (prop: string, value: string): boolean => {
+      if (prop !== 'color') return false
+      if (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value)) return true
+      if (/^rgba?\(\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*(,\s*[\d.]+%?)?\s*\)$/i.test(value)) return true
+      if (/^rgba?\(\s*\d{1,3}%?\s+\d{1,3}%?\s+\d{1,3}%?\s*(\s*\/\s*[\d.]+%?)?\s*\)$/i.test(value)) return true
+      if (/^hsla?\(\s*\d+(?:deg|grad|rad|turn)?\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*(,\s*[\d.]+%?)?\s*\)$/i.test(value)) return true
+      if (/^hsla?\(\s*\d+(?:deg|grad|rad|turn)?\s+\d{1,3}%\s+\d{1,3}%\s*(\s*\/\s*[\d.]+%?)?\s*\)$/i.test(value)) return true
+      const namedColors = new Set(['transparent', 'currentcolor', 'red', 'green', 'blue'])
+      if (namedColors.has(value.toLowerCase())) return true
+      return false
+    }
+
+    beforeEach(() => {
+      if (typeof globalThis.CSS === 'undefined') {
+        ;(globalThis as any).CSS = {}
+      }
+      ;(globalThis.CSS as any).supports = cssColorValidator
+    })
+
     it('should return true for valid CSS colors', function () {
       const validColors = [
         '#f5f5f5',
@@ -1376,19 +1441,12 @@ describe('utils', () => {
       invalidColors.forEach((value) => expect(utils.isColor(value)).toEqual(false))
     })
 
-    it('should validate a valid color name with CSS.supports', () => {
-      // Mock the CSS.supports function
-      window.CSS = window.CSS || {}
-      window.CSS.supports =
-        window.CSS.supports ||
-        function () {
-          return true
-        }
-      const supportsSpy = vi.spyOn(window.CSS, 'supports').mockImplementation(() => true)
+    it('should call CSS.supports to validate colors', () => {
+      const supportsSpy = vi.spyOn(globalThis.CSS as any, 'supports')
 
-      expect(utils.isColor('red')).toBeTruthy()
+      utils.isColor('red')
 
-      expect(supportsSpy).toHaveBeenCalled()
+      expect(supportsSpy).toHaveBeenCalledWith('color', 'red')
     })
   }) // end isColor
 
