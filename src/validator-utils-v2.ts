@@ -324,12 +324,19 @@ export function parseTimeToString(value: string, format = 'h:mm A'): string {
 
 // ============ UTILITY EXPORTS (for compatibility) ============
 
+const MONTH_DICT: Record<string, number> = {
+  ja: 0, en: 0, fe: 1, fé: 1, ap: 3, ab: 3, av: 3, mai: 4, juin: 5, juil: 6,
+  au: 7, ag: 7, ao: 7, se: 8, o: 9, n: 10, d: 11
+}
+
 export function monthToNumber(str: string | number): number {
   if (typeof str === 'number') return str - 1
-  const num = parseInt(str)
+  const num = parseInt(str as string)
   if (!isNaN(num)) return num - 1
   const m = new Date(`1 ${str} 2000`).getMonth()
   if (!isNaN(m)) return m
+  const lower = str.toLowerCase()
+  for (const key in MONTH_DICT) if (lower.startsWith(key)) return MONTH_DICT[key]
   throw new Error('Invalid month name: ' + str)
 }
 
@@ -342,6 +349,14 @@ export function guessDatePart(num: number, known: (string | null)[] = []): strin
 }
 
 export function guessDateParts(str: string): { year: number; month: number; day: number } {
+  const tokens = str.split(/[\s-/:.,]+/).filter(i => i !== '')
+  // Check for NaN tokens first (for console.error behavior compatibility)
+  for (const token of tokens) {
+    if (!/^[a-zA-Zé]+$/.test(token) && !/^'\d\d$/.test(token) && !/^\d+$/.test(token)) {
+      console.error(`not date because ${token} isNaN`)
+      throw new Error('Invalid Date')
+    }
+  }
   const d = parseDate(str)
   if (isNaN(d.getTime())) throw new Error('Invalid Date')
   return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() }
@@ -351,4 +366,138 @@ export function isDateInRange(date: Date, range: string): boolean {
   if (range === 'past' && date > new Date()) return false
   if (range === 'future' && date.getTime() < new Date().setHours(0, 0, 0, 0)) return false
   return true
+}
+
+// ============ FORM & TYPE HELPERS ============
+
+export function isFormControl(el: any): boolean {
+  return el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement
+}
+
+export function isType(el: HTMLInputElement | HTMLTextAreaElement, types: string | string[]): boolean {
+  if (typeof types === 'string') types = [types]
+  return types.includes(el.dataset.type || '') || types.includes(el.type)
+}
+
+// ============ FORMAT CONVERSION ============
+
+export function momentToFPFormat(format: string): string {
+  return format
+    .replace(/YYYY/g, 'Y').replace(/YY/g, 'y')
+    .replace(/MMMM/g, 'F').replace(/MMM/g, '{3}').replace(/MM/g, '{2}').replace(/M/g, 'n')
+    .replace(/DD/g, '{5}').replace(/D/g, 'j')
+    .replace(/dddd/g, 'l').replace(/ddd/g, 'D').replace(/dd/g, 'D').replace(/d/g, 'w')
+    .replace(/HH/g, '{6}').replace(/H/g, 'G').replace(/hh/g, 'h')
+    .replace(/mm/g, 'i').replace(/m/g, 'i').replace(/ss/g, 'S').replace(/s/g, 's')
+    .replace(/A/gi, 'K')
+    .replace(/\{3\}/g, 'M').replace(/\{2\}/g, 'm').replace(/\{5\}/g, 'd').replace(/\{6\}/g, 'H')
+}
+
+// ============ EMAIL VALIDATION ============
+
+const EMAIL_RE = /^([a-zA-Z0-9!#$%'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@((?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)$/
+
+export function isEmail(value: string): boolean {
+  return value.length <= 255 && /^.+@.+\.[a-zA-Z0-9]{2,}$/.test(value) && EMAIL_RE.test(value)
+}
+
+// ============ PHONE VALIDATION ============
+
+export function parseNANPTel(value: string): string {
+  return value.replace(/^[^2-90]+/g, '').replace(/(\d\d\d).*?(\d\d\d).*?(\d\d\d\d)(.*)/, '$1-$2-$3$4')
+}
+
+export function isNANPTel(value: string): boolean {
+  return /^\d{3}-\d{3}-\d{4}$/.test(value)
+}
+
+// ============ NUMBER VALIDATION ============
+
+export function parseInteger(value: string): string {
+  return value.replace(/[^0-9]/g, '')
+}
+
+export function isInteger(value: string): boolean {
+  return /^-?\d*$/.test(value)
+}
+
+export function parseNumber(value: string): string {
+  return value.replace(/[^\-0-9.]/g, '').replace(/(^-)|(-)/g, (_, p1) => p1 ? '-' : '').replace(/(\..*)\./g, '$1')
+}
+
+export function isNumber(value: string): boolean {
+  return /^-?\d*\.?\d*$/.test(value)
+}
+
+// ============ URL VALIDATION ============
+
+export function parseUrl(value: string): string {
+  value = value.trim()
+  return /^(?:[a-z+]+:)?\/\//i.test(value) ? value : 'https://' + value
+}
+
+export function isUrl(value: string): boolean {
+  return /^(?:[-a-z+]+:)?\/\//i.test(value)
+}
+
+// ============ POSTAL VALIDATION ============
+
+export function parseZip(value: string): string {
+  value = value.replace(/[^0-9]/g, '').replace(/(.{5})(.*)/, '$1-$2').trim()
+  return value.length === 6 ? value.replace(/-/, '') : value
+}
+
+export function isZip(value: string): boolean {
+  return /^\d{5}(-\d{4})?$/.test(value)
+}
+
+export function parsePostalCA(value: string): string {
+  return value.toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/(.{3})\s*(.*)/, '$1 $2').trim()
+}
+
+export function isPostalCA(value: string): boolean {
+  return /^[ABCEGHJKLMNPRSTVXY][0-9][ABCEGHJKLMNPRSTVWXYZ] ?[0-9][ABCEGHJKLMNPRSTVWXYZ][0-9]$/.test(value)
+}
+
+// ============ COLOR VALIDATION ============
+
+export function isColor(value: string): boolean {
+  if (['transparent', 'currentColor'].includes(value)) return true
+  if (typeof value !== 'string' || !value.trim()) return false
+  if (typeof CSS !== 'object' || typeof CSS.supports !== 'function') return false
+  return CSS.supports('color', value)
+}
+
+let colorCanvas: HTMLCanvasElement | null = null
+const colorCache = new Map<string, string>()
+
+export function parseColor(value: string): string {
+  value = value.trim().toLowerCase()
+  if (['transparent', 'currentcolor'].includes(value)) return value
+  if (colorCache.has(value)) return colorCache.get(value)!
+  if (!colorCanvas) { colorCanvas = document.createElement('canvas'); (colorCanvas as any).willReadFrequently = true }
+  const ctx = colorCanvas.getContext('2d')
+  if (!ctx) throw new Error("Can't get context")
+  ctx.fillStyle = value
+  ctx.fillRect(0, 0, 1, 1)
+  const d = ctx.getImageData(0, 0, 1, 1).data
+  const hex = '#' + ('000000' + ((d[0] << 16) | (d[1] << 8) | d[2]).toString(16)).slice(-6)
+  colorCache.set(value, hex)
+  return hex
+}
+
+// ============ VALIDATION RESULT ============
+
+interface ValidationResult { valid: boolean; error?: boolean; messages: string[] }
+
+export function normalizeValidationResult(
+  res: boolean | string | { valid: boolean; message?: string; messages?: string | string[]; error?: boolean }
+): ValidationResult {
+  if (typeof res === 'boolean') return { valid: res, error: false, messages: [] }
+  if (typeof res === 'string') return { valid: false, error: false, messages: [res] }
+  const result: ValidationResult = { valid: res.valid ?? false, error: res.error ?? false, messages: [] }
+  if (typeof res.message === 'string') result.messages = [res.message]
+  else if (typeof res.messages === 'string') result.messages = [res.messages]
+  else if (Array.isArray(res.messages)) result.messages = res.messages
+  return result
 }
