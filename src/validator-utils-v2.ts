@@ -173,13 +173,6 @@ export function parseDateTime(value: string | Date): Date | null {
   let time: { hour: number; minute: number; second: number } | null = null
   let dateStr = v
 
-  // Check for "noon" within the string
-  const noonMatch = v.match(/\bnoon\b/i)
-  if (noonMatch) {
-    time = { hour: 12, minute: 0, second: 0 }
-    dateStr = v.replace(noonMatch[0], ' ').replace(/\s+/g, ' ').trim()
-  }
-
   // Try to find and extract time portion - order matters!
   if (!time) {
     const timePatterns = [
@@ -227,17 +220,6 @@ export function parseDateTime(value: string | Date): Date | null {
         time = parsed
         dateStr = trailingTimeMatch[1]
       }
-    }
-  }
-
-  // Also check for meridiem token that might be separate
-  if (time) {
-    const meridMatch = dateStr.match(/\b([ap])\.?m?\.?\b/i)
-    if (meridMatch) {
-      const ap = meridMatch[1].toLowerCase()
-      if (ap === 'p' && time.hour < 12) time.hour += 12
-      if (ap === 'a' && time.hour === 12) time.hour = 0
-      dateStr = dateStr.replace(meridMatch[0], ' ').trim()
     }
   }
 
