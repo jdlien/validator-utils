@@ -1,7 +1,6 @@
 export {
   isFormControl,
   isType,
-  momentToFPFormat,
   monthToNumber,
   yearToFull,
   parseDate,

@@ -1,4 +1,4 @@
-import * as utils from '../src/validator-utils-v2'
+import * as utils from '../src/validator-utils-v1'
 // @ts-ignore
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 type DateParts = { year: number; month: number; day: number }
@@ -65,7 +65,7 @@ describe('utils', () => {
     })
   }) // end isType
 
-  describe.skip('momentToFPFormat - removed in V2', () => {
+  describe('momentToFPFormat', () => {
     it('should correctly convert YYYY to Y', () => {
       expect(utils.momentToFPFormat('YYYY-MM-DD')).toEqual('Y-m-d')
     })
@@ -312,13 +312,13 @@ describe('utils', () => {
     })
   })
 
-  describe.skip('guessDatePart - removed in V2', () => {
+  describe('guessDatePart', () => {
     it('should return empty array if token cannot be valid month, day, or year', () => {
       expect(utils.guessDatePart(-1)).toEqual([])
     })
   })
 
-  describe.skip('guessDateParts - removed in V2', () => {
+  describe('guessDateParts', () => {
     it('should return a valid date object given a valid date string', () => {
       const str = '25 12 2022'
       const result: DateParts = { day: 25, month: 12, year: 2022 }
