@@ -58,8 +58,7 @@ const MONTH_RE = new RegExp(`(${MONTHS})[a-z]*`, 'i')
 
 function monthToNum(s: string): number {
   const m = new Date(`1 ${s} 2000`).getMonth()
-  /* istanbul ignore next -- NaN unreachable: only called with MONTH_RE-validated input */
-  return isNaN(m) ? -1 : m
+  return m
 }
 
 export function yearToFull(y: number | string): number {
@@ -186,23 +185,21 @@ export function parseDateTime(value: string | Date): Date | null {
   let dateStr = v
 
   // Try to find and extract time portion - order matters!
-  if (!time) {
-    const timePatterns = [
-      /(\d{1,2}:\d{1,2}(?::\d{2})?)\s*([ap]\.?m?\.?)?/i,  // 14:30, 2:30pm, 1:5
-      /\b(\d{1,2})\s*([ap]\.?m?\.?)\b/i,  // 2pm, 2p.m., 2 PM, 1P
-      /\b(\d{3,4})([ap])m?\b/i,  // 1430pm, 230p, 1200AM
-    ]
+  const timePatterns = [
+    /(\d{1,2}:\d{1,2}(?::\d{2})?)\s*([ap]\.?m?\.?)?/i,  // 14:30, 2:30pm, 1:5
+    /\b(\d{1,2})\s*([ap]\.?m?\.?)\b/i,  // 2pm, 2p.m., 2 PM, 1P
+    /\b(\d{3,4})([ap])m?\b/i,  // 1430pm, 230p, 1200AM
+  ]
 
-    for (const re of timePatterns) {
-      const m = v.match(re)
-      if (m) {
-        const parsed = parseTime(m[0])
-        if (parsed) {
-          time = parsed
-          // Remove match and cleanup trailing punctuation/whitespace
-          dateStr = v.replace(m[0], ' ').replace(/[\s.]+$/g, '').replace(/\s+/g, ' ').trim()
-          break
-        }
+  for (const re of timePatterns) {
+    const m = v.match(re)
+    if (m) {
+      const parsed = parseTime(m[0])
+      if (parsed) {
+        time = parsed
+        // Remove match and cleanup trailing punctuation/whitespace
+        dateStr = v.replace(m[0], ' ').replace(/[\s.]+$/g, '').replace(/\s+/g, ' ').trim()
+        break
       }
     }
   }
@@ -371,7 +368,31 @@ export function isInteger(value: string): boolean {
 }
 
 export function parseNumber(value: string): string {
-  return value.replace(/[^\-0-9.]/g, '').replace(/(^-)|(-)/g, (_, p1) => p1 ? '-' : '').replace(/(\..*)\./g, '$1')
+  const cleaned = value.replace(/[^\-0-9.]/g, '')
+  let out = ''
+  let seenDot = false
+  let seenMinus = false
+
+  for (let i = 0; i < cleaned.length; i += 1) {
+    const ch = cleaned[i]
+    if (ch === '-') {
+      if (!seenMinus && out.length === 0) {
+        out += '-'
+        seenMinus = true
+      }
+      continue
+    }
+    if (ch === '.') {
+      if (!seenDot) {
+        out += '.'
+        seenDot = true
+      }
+      continue
+    }
+    out += ch
+  }
+
+  return out
 }
 
 export function isNumber(value: string): boolean {
@@ -413,7 +434,6 @@ export function isPostalCA(value: string): boolean {
 export function isColor(value: string): boolean {
   if (['transparent', 'currentColor'].includes(value)) return true
   if (!value.trim()) return false
-  /* c8 ignore next -- CSS availability varies by environment */
   if (typeof CSS === 'undefined' || !CSS.supports) return false
   return CSS.supports('color', value)
 }

@@ -200,6 +200,18 @@ describe('utils', () => {
       expect(utils.parseDate("'01 2 03")).toEqual(new Date('2001/02/03 00:00:00'))
     })
 
+    it('handles month names with an explicit year in the second position', () => {
+      expect(utils.parseDate('Feb 3 2001')).toEqual(new Date('2001/02/03 00:00:00'))
+    })
+
+    it('treats large first numbers as the year when a month name is present', () => {
+      expect(utils.parseDate('Feb 40 5')).toEqual(new Date(2040, 1, 5))
+    })
+
+    it('returns Invalid Date for month-only input', () => {
+      expect(utils.parseDate('Jan').getTime()).toBeNaN()
+    })
+
     it('adds the current year if no year was given', () => {
       expect(utils.parseDate('02-03')).toEqual(new Date(today.getFullYear() + '/02/03'))
       expect(utils.parseDate('Jan-06')).toEqual(new Date(today.getFullYear() + '/01/06'))
@@ -242,6 +254,10 @@ describe('utils', () => {
       expect(utils.parseDate('2001-04-20 4:00p')).toEqual(new Date(2001, 3, 20, 16, 0, 0, 0))
     })
 
+    it('ignores invalid times embedded in dates', () => {
+      expect(utils.parseDate('2001-04-20 12:99')).toEqual(new Date(2001, 3, 20, 0, 0, 0, 0))
+    })
+
     // Date inference tests (previously tested via guessDateParts)
     it('parses space-separated date with day > 12', () => {
       expect(utils.parseDate('25 12 2022')).toEqual(new Date(2022, 11, 25))
@@ -260,6 +276,19 @@ describe('utils', () => {
       expect(result.getFullYear()).toBe(2003)
       expect(result.getMonth()).toBe(0) // January
       expect(result.getDate()).toBe(2)
+    })
+
+    it('handles day-first numeric dates with 2-digit years', () => {
+      expect(utils.parseDate('25-12-23')).toEqual(new Date(2023, 11, 25))
+    })
+
+    it('expands 2-digit years when the year comes first', () => {
+      expect(utils.parseDate('85-01-02')).toEqual(new Date(1985, 0, 2))
+    })
+
+    it('uses the current year when only month and day are provided', () => {
+      const year = new Date().getFullYear()
+      expect(utils.parseDate('Jan 5')).toEqual(new Date(year, 0, 5))
     })
   })
 
@@ -374,6 +403,12 @@ describe('utils', () => {
       const result = utils.parseTime(time)
       expect(result).toBe(null)
     })
+
+    it('should return null for out-of-range times', () => {
+      expect(utils.parseTime('24:00')).toBeNull()
+      expect(utils.parseTime('12:60')).toBeNull()
+      expect(utils.parseTime('12:30:99')).toBeNull()
+    })
   }) // end parseTime
 
   describe('parseTimeToString', () => {
@@ -481,6 +516,12 @@ describe('utils', () => {
       expect(utils.parseDateTime('2023-09-25T10A')).toEqual(new Date(2023, 8, 25, 10, 0))
       expect(utils.parseDateTime('20230925 10 AM')).toEqual(new Date(2023, 8, 25, 10, 0))
       expect(utils.parseDateTime('2023.09.25 1200AM')).toEqual(new Date(2023, 8, 25, 0, 0))
+    })
+
+    it('ignores invalid time tokens that still resemble a time', () => {
+      expect(utils.parseDateTime('March 10 2021 99:99')).toEqual(new Date(2021, 2, 10))
+      expect(utils.parseDateTime('2023-09-25 99')).toEqual(new Date(2023, 8, 25))
+      expect(utils.parseDateTime('09-25-2023 13')).toEqual(new Date(2023, 8, 25))
     })
 
     it('should handle 2-4 digit times with no meridiem and no colon if the year is first', () => {
@@ -1350,6 +1391,17 @@ describe('utils', () => {
         '123456',
       ]
       invalidColors.forEach((value) => expect(utils.isColor(value)).toEqual(false))
+    })
+
+    it('returns false when CSS.supports is unavailable', () => {
+      const originalCSS = globalThis.CSS
+      try {
+        // @ts-ignore
+        delete (globalThis as any).CSS
+        expect(utils.isColor('red')).toBe(false)
+      } finally {
+        ;(globalThis as any).CSS = originalCSS
+      }
     })
 
     it('should call CSS.supports to validate colors', () => {
