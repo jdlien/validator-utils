@@ -13,9 +13,9 @@ This was a rewrite that makes significant reductions in code size and enhances p
 
 |        | v1.2.8    | v2.0.0   | Reduction |
 | ------ | --------- | -------- | --------- |
-| Raw    | 11.92 KiB | 8.36 KiB | **-30%**  |
-| Gzip   | 4.78 KiB  | 3.48 KiB | **-27%**  |
-| Brotli | 4.35 KiB  | 3.14 KiB | **-28%**  |
+| Raw    | 11.92 KiB | 8.63 KiB | **-28%**  |
+| Gzip   | 4.78 KiB  | 3.62 KiB | **-24%**  |
+| Brotli | 4.35 KiB  | 3.27 KiB | **-25%**  |
 
 ### Changed
 
@@ -70,6 +70,71 @@ This was a rewrite that makes significant reductions in code size and enhances p
 
 - **`guessDatePart()`**: Removed helper function (was only used internally by `guessDateParts()`).
 
-## [1.2.8] - Previous stable release
+## [1.2.8] - 2026-01-18
 
-See git history for changes prior to 2.0.0.
+### Changed
+
+- Added code annotations for untestable defensive code paths
+- Updated dependencies and uncommented canvas tests that now work
+
+## [1.2.7] - 2024-03-04
+
+### Added
+
+- Support for 'noon' in `parseTime()`
+
+## [1.2.6] - 2024-03-04
+
+### Changed
+
+- Significantly improved `parseDateTime()` parsing capabilities
+
+## [1.2.5] - 2023-11-28
+
+### Changed
+
+- Minor internal improvements
+
+## [1.2.4] - 2023-11-28
+
+### Changed
+
+- `parseDateTime()` now only requires a single digit for minutes (e.g., `2:5pm`)
+
+## [1.2.3] - 2023-11-27
+
+### Changed
+
+- Updated exports in index.ts with new functions
+
+## [1.2.2] - 2023-11-27
+
+### Changed
+
+- Build updates
+
+## [1.2.1] - 2023-11-27
+
+### Added
+
+- `parseDateTimeToString()` method for formatting parsed date-times as strings
+
+## [1.2.0] - 2023-11-27
+
+### Added
+
+- `parseDateTime()` method for parsing combined date and time strings
+- Times in this format require a colon separating hour and minute, with optional meridiem
+
+## [1.1.6] - 2023-02-27
+
+### Changed
+
+- Added main entry point for test compatibility
+
+## [1.1.5] - 2023-02-26
+
+### Added
+
+- TypeScript type definitions (d.ts file)
+- Types added to package.json exports
