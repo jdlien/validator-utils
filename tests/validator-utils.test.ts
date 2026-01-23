@@ -600,6 +600,12 @@ describe('utils', () => {
       const result = utils.formatDateTime(date, format)
       expect(result).toEqual('12:34:56')
     })
+
+    it('should preserve escaped text in brackets', () => {
+      const date = new Date(2022, 0, 1, 12, 0, 0)
+      expect(utils.formatDateTime(date, '[Today is] YYYY-MM-DD')).toEqual('Today is 2022-01-01')
+      expect(utils.formatDateTime(date, 'YYYY [at] HH:mm')).toEqual('2022 at 12:00')
+    })
   }) // end formatDateTime
 
   describe('parseDateToString', () => {

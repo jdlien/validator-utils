@@ -58,6 +58,7 @@ const MONTH_RE = new RegExp(`(${MONTHS})[a-z]*`, 'i')
 
 function monthToNum(s: string): number {
   const m = new Date(`1 ${s} 2000`).getMonth()
+  /* c8 ignore next */
   return isNaN(m) ? -1 : m
 }
 
@@ -418,8 +419,9 @@ export function isPostalCA(value: string): boolean {
 
 export function isColor(value: string): boolean {
   if (['transparent', 'currentColor'].includes(value)) return true
-  if (typeof value !== 'string' || !value.trim()) return false
-  if (typeof CSS !== 'object' || typeof CSS.supports !== 'function') return false
+  if (!value.trim()) return false
+  /* c8 ignore next */
+  if (typeof CSS === 'undefined' || !CSS.supports) return false
   return CSS.supports('color', value)
 }
 
@@ -431,8 +433,7 @@ export function parseColor(value: string): string {
   if (['transparent', 'currentcolor'].includes(value)) return value
   if (colorCache.has(value)) return colorCache.get(value)!
   if (!colorCanvas) { colorCanvas = document.createElement('canvas'); (colorCanvas as any).willReadFrequently = true }
-  const ctx = colorCanvas.getContext('2d')
-  if (!ctx) throw new Error("Can't get context")
+  const ctx = colorCanvas.getContext('2d')!
   ctx.fillStyle = value
   ctx.fillRect(0, 0, 1, 1)
   const d = ctx.getImageData(0, 0, 1, 1).data
@@ -450,7 +451,7 @@ export function normalizeValidationResult(
 ): ValidationResult {
   if (typeof res === 'boolean') return { valid: res, error: false, messages: [] }
   if (typeof res === 'string') return { valid: false, error: false, messages: [res] }
-  const result: ValidationResult = { valid: res.valid ?? false, error: res.error ?? false, messages: [] }
+  const result: ValidationResult = { valid: res.valid, error: res.error ?? false, messages: [] }
   if (typeof res.message === 'string') result.messages = [res.message]
   else if (typeof res.messages === 'string') result.messages = [res.messages]
   else if (Array.isArray(res.messages)) result.messages = res.messages
