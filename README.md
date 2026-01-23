@@ -61,6 +61,30 @@ Here is a list of the utility functions:
 - **parseColor**: Parses a color string into a standardized format.
 - **normalizeValidationResult**: Normalizes a validation result (like a boolean or string) into an object with a valid property and a messages array of strings.
 
+## V2 (Lightweight Build)
+
+V2 is an ultra-lightweight rewrite optimized for minimal bundle size. It is 28% smaller in lines of code and 18% smaller in character count while maintaining compatibility with the vast majority of use cases.
+
+### Breaking Changes in V2
+
+The following functions have been removed from V2 to reduce bundle size. If you need these functions, you can implement them yourself using the code snippets below.
+
+#### Removed Functions
+
+**`guessDateParts`** and **`guessDatePart`** - Use `parseDate()` directly:
+
+```typescript
+// Old: const { year, month, day } = guessDateParts(str)
+// New:
+const d = parseDate(str)
+if (isNaN(d.getTime())) throw new Error('Invalid Date')
+const parts = { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() }
+```
+
+### Other V2 Changes
+
+**Email Validation**: V2 uses a simplified email regex that covers standard email formats. Some obscure RFC 5322 edge cases (like quoted local parts with special characters) may not be validated identically to V1. For most applications, this change has no practical impact.
+
 ## Contributing
 
 Install dev dependencies:

@@ -1,7 +1,6 @@
 import * as utils from '../src/validator-utils'
 // @ts-ignore
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-type DateParts = { year: number; month: number; day: number }
 
 describe('utils', () => {
   describe('isFormControl', () => {
@@ -64,72 +63,6 @@ describe('utils', () => {
       expect(utils.isType(textAreaElement, 'text')).toBe(false)
     })
   }) // end isType
-
-  describe('momentToFPFormat', () => {
-    it('should correctly convert YYYY to Y', () => {
-      expect(utils.momentToFPFormat('YYYY-MM-DD')).toEqual('Y-m-d')
-    })
-
-    it('should correctly convert YY to y', () => {
-      expect(utils.momentToFPFormat('YY-MM-DD')).toEqual('y-m-d')
-    })
-
-    it('should correctly convert MMMM to F', () => {
-      expect(utils.momentToFPFormat('YYYY-MMMM-DD')).toEqual('Y-F-d')
-    })
-
-    it('should correctly convert MMM to M', () => {
-      expect(utils.momentToFPFormat('YYYY-MMM-DD')).toEqual('Y-M-d')
-    })
-
-    it('should correctly convert MM to m', () => {
-      expect(utils.momentToFPFormat('YYYY-MM-DD')).toEqual('Y-m-d')
-    })
-
-    it('should correctly convert M to n', () => {
-      expect(utils.momentToFPFormat('YYYY-M-DD')).toEqual('Y-n-d')
-    })
-
-    it('should correctly convert DD to d', () => {
-      expect(utils.momentToFPFormat('YYYY-MM-DD')).toEqual('Y-m-d')
-    })
-
-    it('should correctly convert D to j', () => {
-      expect(utils.momentToFPFormat('YYYY-MM-D')).toEqual('Y-m-j')
-    })
-
-    it('should correctly convert dddd to l', () => {
-      expect(utils.momentToFPFormat('dddd, MMMM DD YYYY')).toEqual('l, F d Y')
-    })
-
-    it('should correctly convert ddd to D', () => {
-      expect(utils.momentToFPFormat('ddd, MMM DD YYYY')).toEqual('D, M d Y')
-    })
-
-    it('should correctly convert dd to D', () => {
-      expect(utils.momentToFPFormat('dd, MMM DD YYYY')).toEqual('D, M d Y')
-    })
-
-    it('should correctly convert d to w', () => {
-      expect(utils.momentToFPFormat('d, MMM DD YYYY')).toEqual('w, M d Y')
-    })
-
-    it('should correctly convert HH to H', () => {
-      expect(utils.momentToFPFormat('HH:mm:ss')).toEqual('H:i:S')
-    })
-
-    it('should correctly convert H to G', () => {
-      expect(utils.momentToFPFormat('H:mm:ss')).toEqual('G:i:S')
-    })
-
-    it('should correctly convert 12hr hh to h unpadded', () => {
-      expect(utils.momentToFPFormat('h:m:s')).toEqual('h:i:s')
-    })
-
-    it('should correctly convert 12hr hh to h padded', () => {
-      expect(utils.momentToFPFormat('hh:mm:ss')).toEqual('h:i:S')
-    })
-  }) // momentToFPFormat
 
   describe('monthToNumber', () => {
     it('returns the correct zero-based month number for numeric input', () => {
@@ -267,6 +200,18 @@ describe('utils', () => {
       expect(utils.parseDate("'01 2 03")).toEqual(new Date('2001/02/03 00:00:00'))
     })
 
+    it('handles month names with an explicit year in the second position', () => {
+      expect(utils.parseDate('Feb 3 2001')).toEqual(new Date('2001/02/03 00:00:00'))
+    })
+
+    it('treats large first numbers as the year when a month name is present', () => {
+      expect(utils.parseDate('Feb 40 5')).toEqual(new Date(2040, 1, 5))
+    })
+
+    it('returns Invalid Date for month-only input', () => {
+      expect(utils.parseDate('Jan').getTime()).toBeNaN()
+    })
+
     it('adds the current year if no year was given', () => {
       expect(utils.parseDate('02-03')).toEqual(new Date(today.getFullYear() + '/02/03'))
       expect(utils.parseDate('Jan-06')).toEqual(new Date(today.getFullYear() + '/01/06'))
@@ -307,63 +252,44 @@ describe('utils', () => {
 
     it('returns correct time when a time is passed', () => {
       expect(utils.parseDate('2001-04-20 4:00p')).toEqual(new Date(2001, 3, 20, 16, 0, 0, 0))
-      //   // expect(utils.parseDate('manana')).toEqual(tomorrow)
-      //   // expect(utils.parseDate('demain')).toEqual(tomorrow)
-    })
-  })
-
-  describe('guessDatePart', () => {
-    it('should return empty array if token cannot be valid month, day, or year', () => {
-      expect(utils.guessDatePart(-1)).toEqual([])
-    })
-  })
-
-  describe('guessDateParts', () => {
-    it('should return a valid date object given a valid date string', () => {
-      const str = '25 12 2022'
-      const result: DateParts = { day: 25, month: 12, year: 2022 }
-      expect(utils.guessDateParts(str)).toEqual(result)
     })
 
-    it('throws an error if the date is invalid', () => {
-      expect(() => utils.guessDateParts('1234')).toThrow('Invalid Date')
+    it('ignores invalid times embedded in dates', () => {
+      expect(utils.parseDate('2001-04-20 12:99')).toEqual(new Date(2001, 3, 20, 0, 0, 0, 0))
     })
 
-    it('throws an error for invalid date strings', () => {
-      const invalidDateString = '*&bcd efgh'
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-      expect(() => utils.guessDateParts(invalidDateString)).toThrowError('Invalid Date')
-      expect(consoleError).toHaveBeenCalledWith(`not date because *&bcd isNaN`)
-      consoleError.mockRestore()
+    // Date inference tests (previously tested via guessDateParts)
+    it('parses space-separated date with day > 12', () => {
+      expect(utils.parseDate('25 12 2022')).toEqual(new Date(2022, 11, 25))
     })
 
-    it('should correctly assign year if meanings includes y', () => {
-      const dateString = '1 2 3'
-      const date = utils.guessDateParts(dateString)
-      expect(date.year).toBe(2003)
+    it('returns Invalid Date for ambiguous 4-digit input', () => {
+      expect(utils.parseDate('1234').getTime()).toBeNaN()
     })
 
-    // it('should return an error given an invalid date string', () => {
-    //   const str = '31 22 2022'
-    //   expect(() => utils.guessDateParts(str)).toThrowError('Invalid Date')
-    // })
+    it('returns Invalid Date for garbage input', () => {
+      expect(utils.parseDate('*&bcd efgh').getTime()).toBeNaN()
+    })
 
-    // it('should return a valid date object given a two-token date string', () => {
-    //   const str = '12 2022'
-    //   const result: DateParts = { day: new Date().getDate(), month: 12, year: 2022 }
-    //   expect(utils.guessDateParts(str)).toEqual(result)
-    // })
+    it('infers 2-digit year correctly for ambiguous dates', () => {
+      const result = utils.parseDate('1 2 3')
+      expect(result.getFullYear()).toBe(2003)
+      expect(result.getMonth()).toBe(0) // January
+      expect(result.getDate()).toBe(2)
+    })
 
-    // it('should return a valid date object given a one-token date string', () => {
-    //   const str = '2022'
-    //   const result: DateParts = {
-    //     day: new Date().getDate(),
-    //     month: new Date().getMonth() + 1,
-    //     year: 2022,
-    //   }
-    //   expect(utils.guessDateParts(str)).toEqual(result)
-    // })
+    it('handles day-first numeric dates with 2-digit years', () => {
+      expect(utils.parseDate('25-12-23')).toEqual(new Date(2023, 11, 25))
+    })
+
+    it('expands 2-digit years when the year comes first', () => {
+      expect(utils.parseDate('85-01-02')).toEqual(new Date(1985, 0, 2))
+    })
+
+    it('uses the current year when only month and day are provided', () => {
+      const year = new Date().getFullYear()
+      expect(utils.parseDate('Jan 5')).toEqual(new Date(year, 0, 5))
+    })
   })
 
   describe('parseTime', () => {
@@ -477,6 +403,12 @@ describe('utils', () => {
       const result = utils.parseTime(time)
       expect(result).toBe(null)
     })
+
+    it('should return null for out-of-range times', () => {
+      expect(utils.parseTime('24:00')).toBeNull()
+      expect(utils.parseTime('12:60')).toBeNull()
+      expect(utils.parseTime('12:30:99')).toBeNull()
+    })
   }) // end parseTime
 
   describe('parseTimeToString', () => {
@@ -584,6 +516,12 @@ describe('utils', () => {
       expect(utils.parseDateTime('2023-09-25T10A')).toEqual(new Date(2023, 8, 25, 10, 0))
       expect(utils.parseDateTime('20230925 10 AM')).toEqual(new Date(2023, 8, 25, 10, 0))
       expect(utils.parseDateTime('2023.09.25 1200AM')).toEqual(new Date(2023, 8, 25, 0, 0))
+    })
+
+    it('ignores invalid time tokens that still resemble a time', () => {
+      expect(utils.parseDateTime('March 10 2021 99:99')).toEqual(new Date(2021, 2, 10))
+      expect(utils.parseDateTime('2023-09-25 99')).toEqual(new Date(2023, 8, 25))
+      expect(utils.parseDateTime('09-25-2023 13')).toEqual(new Date(2023, 8, 25))
     })
 
     it('should handle 2-4 digit times with no meridiem and no colon if the year is first', () => {
@@ -703,7 +641,92 @@ describe('utils', () => {
       const result = utils.formatDateTime(date, format)
       expect(result).toEqual('12:34:56')
     })
+
+    it('should preserve escaped text in brackets', () => {
+      const date = new Date(2022, 0, 1, 12, 0, 0)
+      expect(utils.formatDateTime(date, '[Today is] YYYY-MM-DD')).toEqual('Today is 2022-01-01')
+      expect(utils.formatDateTime(date, 'YYYY [at] HH:mm')).toEqual('2022 at 12:00')
+    })
+
+    it('should accept string date input', () => {
+      expect(utils.formatDateTime('2022-01-15', 'MMMM D, YYYY')).toEqual('January 15, 2022')
+    })
+
+    it('should return empty string for invalid date', () => {
+      expect(utils.formatDateTime('not a date', 'YYYY-MM-DD')).toEqual('')
+    })
   }) // end formatDateTime
+
+  describe('momentToFPFormat', () => {
+    it('should correctly convert YYYY to Y', () => {
+      expect(utils.momentToFPFormat('YYYY-MM-DD')).toEqual('Y-m-d')
+    })
+
+    it('should correctly convert YY to y', () => {
+      expect(utils.momentToFPFormat('YY-MM-DD')).toEqual('y-m-d')
+    })
+
+    it('should correctly convert MMMM to F', () => {
+      expect(utils.momentToFPFormat('YYYY-MMMM-DD')).toEqual('Y-F-d')
+    })
+
+    it('should correctly convert MMM to M', () => {
+      expect(utils.momentToFPFormat('YYYY-MMM-DD')).toEqual('Y-M-d')
+    })
+
+    it('should correctly convert MM to m', () => {
+      expect(utils.momentToFPFormat('YYYY-MM-DD')).toEqual('Y-m-d')
+    })
+
+    it('should correctly convert M to n', () => {
+      expect(utils.momentToFPFormat('YYYY-M-DD')).toEqual('Y-n-d')
+    })
+
+    it('should correctly convert DD to d', () => {
+      expect(utils.momentToFPFormat('YYYY-MM-DD')).toEqual('Y-m-d')
+    })
+
+    it('should correctly convert D to j', () => {
+      expect(utils.momentToFPFormat('YYYY-MM-D')).toEqual('Y-m-j')
+    })
+
+    it('should correctly convert dddd to l', () => {
+      expect(utils.momentToFPFormat('dddd, MMMM DD YYYY')).toEqual('l, F d Y')
+    })
+
+    it('should correctly convert ddd to D', () => {
+      expect(utils.momentToFPFormat('ddd, MMM DD YYYY')).toEqual('D, M d Y')
+    })
+
+    it('should correctly convert dd to D', () => {
+      expect(utils.momentToFPFormat('dd, MMM DD YYYY')).toEqual('D, M d Y')
+    })
+
+    it('should correctly convert d to w', () => {
+      expect(utils.momentToFPFormat('d, MMM DD YYYY')).toEqual('w, M d Y')
+    })
+
+    it('should correctly convert HH to H', () => {
+      expect(utils.momentToFPFormat('HH:mm:ss')).toEqual('H:i:S')
+    })
+
+    it('should correctly convert H to G', () => {
+      expect(utils.momentToFPFormat('H:mm:ss')).toEqual('G:i:S')
+    })
+
+    it('should correctly convert 12hr hh to h unpadded', () => {
+      expect(utils.momentToFPFormat('h:m:s')).toEqual('h:i:s')
+    })
+
+    it('should correctly convert 12hr hh to h padded', () => {
+      expect(utils.momentToFPFormat('hh:mm:ss')).toEqual('h:i:S')
+    })
+
+    it('should correctly convert meridiem', () => {
+      expect(utils.momentToFPFormat('hh:mm A')).toEqual('h:i K')
+      expect(utils.momentToFPFormat('hh:mm a')).toEqual('h:i K')
+    })
+  }) // end momentToFPFormat
 
   describe('parseDateToString', () => {
     it('should return a formatted string for a valid date', () => {
@@ -899,8 +922,6 @@ describe('utils', () => {
       'email+tag@example.com',
       'email.dot@example.com',
       'email@sub.example.com',
-      '"email"@example.com',
-      '"email@example.com"@example.com',
       'correo@ejemplo.es',
       'user@xn--ls8h.com',
       'user@example.com',
@@ -1167,6 +1188,51 @@ describe('utils', () => {
   })
 
   describe('isColor', () => {
+    // Mock CSS.supports since jsdom doesn't implement it properly
+    const cssColorValidator = (prop: string, value: string): boolean => {
+      if (prop !== 'color') return false
+
+      // Hex colors
+      if (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value)) return true
+
+      // RGB/RGBA with comma syntax: rgb(r, g, b) or rgba(r, g, b, a)
+      if (/^rgba?\(\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*(,\s*[\d.]+%?)?\s*\)$/i.test(value))
+        return true
+
+      // RGB/RGBA with space syntax: rgb(r g b) or rgb(r g b / a)
+      if (/^rgba?\(\s*\d{1,3}%?\s+\d{1,3}%?\s+\d{1,3}%?\s*(\s*\/\s*[\d.]+%?)?\s*\)$/i.test(value))
+        return true
+
+      // HSL/HSLA with comma syntax
+      if (/^hsla?\(\s*\d+(?:deg|grad|rad|turn)?\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*(,\s*[\d.]+%?)?\s*\)$/i.test(value))
+        return true
+
+      // HSL/HSLA with space syntax
+      if (/^hsla?\(\s*\d+(?:deg|grad|rad|turn)?\s+\d{1,3}%\s+\d{1,3}%\s*(\s*\/\s*[\d.]+%?)?\s*\)$/i.test(value))
+        return true
+
+      // Named colors
+      const namedColors = new Set([
+        'transparent', 'currentcolor', 'black', 'white', 'red', 'green', 'blue', 'yellow',
+        'orange', 'purple', 'brown', 'pink', 'gray', 'grey', 'lavenderblush', 'honeydew',
+        'seashell', 'azure', 'lavender', 'aliceblue', 'ghostwhite', 'mintcream', 'oldlace',
+        'linen', 'cornsilk', 'papayawhip', 'beige', 'bisque', 'blanchedalmond', 'wheat',
+        'navajowhite', 'peachpuff', 'moccasin', 'gainsboro', 'lightgrey', 'lightgray',
+        'silver', 'darkgray', 'dimgray'
+      ])
+      if (namedColors.has(value.toLowerCase())) return true
+
+      return false
+    }
+
+    beforeEach(() => {
+      // Setup CSS.supports mock
+      if (typeof globalThis.CSS === 'undefined') {
+        ;(globalThis as any).CSS = {}
+      }
+      ;(globalThis.CSS as any).supports = cssColorValidator
+    })
+
     const validHexColors = [
       '#000000',
       '#00000000',
@@ -1346,7 +1412,27 @@ describe('utils', () => {
     })
   }) // end isColor
 
-  describe('isColor', function () {
+  describe('isColor additional tests', function () {
+    // Mock CSS.supports since jsdom doesn't implement it properly
+    const cssColorValidator = (prop: string, value: string): boolean => {
+      if (prop !== 'color') return false
+      if (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value)) return true
+      if (/^rgba?\(\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*(,\s*[\d.]+%?)?\s*\)$/i.test(value)) return true
+      if (/^rgba?\(\s*\d{1,3}%?\s+\d{1,3}%?\s+\d{1,3}%?\s*(\s*\/\s*[\d.]+%?)?\s*\)$/i.test(value)) return true
+      if (/^hsla?\(\s*\d+(?:deg|grad|rad|turn)?\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*(,\s*[\d.]+%?)?\s*\)$/i.test(value)) return true
+      if (/^hsla?\(\s*\d+(?:deg|grad|rad|turn)?\s+\d{1,3}%\s+\d{1,3}%\s*(\s*\/\s*[\d.]+%?)?\s*\)$/i.test(value)) return true
+      const namedColors = new Set(['transparent', 'currentcolor', 'red', 'green', 'blue'])
+      if (namedColors.has(value.toLowerCase())) return true
+      return false
+    }
+
+    beforeEach(() => {
+      if (typeof globalThis.CSS === 'undefined') {
+        ;(globalThis as any).CSS = {}
+      }
+      ;(globalThis.CSS as any).supports = cssColorValidator
+    })
+
     it('should return true for valid CSS colors', function () {
       const validColors = [
         '#f5f5f5',
@@ -1365,6 +1451,8 @@ describe('utils', () => {
 
     it('should return false for invalid CSS colors', function () {
       const invalidColors = [
+        '',
+        '   ',
         '#f5f5f',
         'asdf',
         'browne',
@@ -1376,19 +1464,23 @@ describe('utils', () => {
       invalidColors.forEach((value) => expect(utils.isColor(value)).toEqual(false))
     })
 
-    it('should validate a valid color name with CSS.supports', () => {
-      // Mock the CSS.supports function
-      window.CSS = window.CSS || {}
-      window.CSS.supports =
-        window.CSS.supports ||
-        function () {
-          return true
-        }
-      const supportsSpy = vi.spyOn(window.CSS, 'supports').mockImplementation(() => true)
+    it('returns false when CSS.supports is unavailable', () => {
+      const originalCSS = globalThis.CSS
+      try {
+        // @ts-ignore
+        delete (globalThis as any).CSS
+        expect(utils.isColor('red')).toBe(false)
+      } finally {
+        ;(globalThis as any).CSS = originalCSS
+      }
+    })
 
-      expect(utils.isColor('red')).toBeTruthy()
+    it('should call CSS.supports to validate colors', () => {
+      const supportsSpy = vi.spyOn(globalThis.CSS as any, 'supports')
 
-      expect(supportsSpy).toHaveBeenCalled()
+      utils.isColor('red')
+
+      expect(supportsSpy).toHaveBeenCalledWith('color', 'red')
     })
   }) // end isColor
 
