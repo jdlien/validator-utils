@@ -167,6 +167,11 @@ export function parseDateTime(value: string | Date): Date | null {
 
   // Normalize ISO T separator
   v = v.replace(/(\d)T(\d)/i, '$1 $2')
+  // Normalize dot-separated times: "15.09.26" -> "15:09:26"
+  v = v.replace(
+    /(^|[\sT])(\d{1,2})\.(\d{1,2})(?:\.(\d{1,2}))?(?=\s*[ap]\.?m?\.?\b|(?:\s|$))/gi,
+    (_, prefix, h, m, s) => `${prefix}${s ? `${h}:${m}:${s}` : `${h}:${m}`}`
+  )
 
   // Special: "now" returns current time
   if (/^now$/i.test(v)) {
@@ -206,10 +211,17 @@ export function parseDateTime(value: string | Date): Date | null {
 
   // Check for bare time after year-first date (e.g., "2023-09-25 1200", "20230925 13", "20230925 12 a.m.")
   if (!time) {
-    const yearFirstMatch = dateStr.match(/^(\d{4}[\-\/\.\s]\d{1,2}[\-\/\.\s]\d{1,2}|\d{8})\s+(\d{1,4})(\s*[ap]\.?m?\.?)?$/i)
+    const yearFirstMatch = dateStr.match(
+      /^(\d{4}[\-\/\.\s]\d{1,2}[\-\/\.\s]\d{1,2}|\d{8})\s+(\d{1,6})(\s*[ap]\.?m?\.?)?(?:\s*(?:z|utc|gmt|[+-]\d{2}:?\d{2})\b)?$/i
+    )
     if (yearFirstMatch) {
       // Combine time digits with meridiem (handling space between them)
-      const timeStr = (yearFirstMatch[2] + (yearFirstMatch[3] || '')).replace(/\s+/g, '')
+      const timeDigits = yearFirstMatch[2]
+      const meridiem = (yearFirstMatch[3] || '').replace(/\s+/g, '')
+      let timeStr = timeDigits + meridiem
+      if (timeDigits.length === 6) {
+        timeStr = `${timeDigits.slice(0, 2)}:${timeDigits.slice(2, 4)}:${timeDigits.slice(4, 6)}${meridiem}`
+      }
       const parsed = parseTime(timeStr)
       if (parsed) {
         time = parsed

@@ -21,6 +21,7 @@ This was a rewrite that makes significant reductions in code size and enhances p
 
 - **Email validation simplified**: Now uses a practical regex instead of full RFC 5322 compliance. Quoted local parts like `"john doe"@example.com` are no longer accepted. All standard email formats continue to work.
 - **Date parsing rewritten**: The `parseDate()` function now uses streamlined inline logic instead of the multi-pass `guessDateParts()` algorithm. Behavior is equivalent for all common date formats.
+- **Date-time parsing expanded**: `parseDateTime()` now accepts ISO basic timestamps like `20210314T150926Z`, ISO basic with offsets like `20210314T1509+0200`, and dot-separated times like `2021-03-14 15.09`.
 
 ### Removed
 
