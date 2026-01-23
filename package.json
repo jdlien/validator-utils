@@ -1,6 +1,6 @@
 {
   "name": "@jdlien/validator-utils",
-  "version": "1.2.8",
+  "version": "2.0.0",
   "type": "module",
   "packageManager": "pnpm@10.11.0",
   "module": "dist/validator-utils.js",
@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && tsc --emitDeclarationOnly",
+    "size:wire": "node scripts/measure-wire-size.mjs",
     "preview": "vite preview",
     "test": "vitest",
     "coverage": "vitest --coverage"
@@ -40,17 +41,20 @@
   "homepage": "https://github.com/jdlien/validator-utils#readme",
   "devDependencies": {
     "@types/jsdom": "^27.0.0",
-    "@vitest/coverage-v8": "^4.0.17",
-    "canvas": "^3.0.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "canvas": "^3.2.1",
     "jsdom": "^27.4.0",
     "jsdom-global": "^3.0.2",
-    "prettier": "^3.0.1",
-    "typescript": "^5.1.6",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
     "vite": "^7.3.1",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.18"
   },
   "sideEffects": false,
   "pnpm": {
-    "onlyBuiltDependencies": ["canvas", "esbuild"]
+    "onlyBuiltDependencies": [
+      "canvas",
+      "esbuild"
+    ]
   }
 }
