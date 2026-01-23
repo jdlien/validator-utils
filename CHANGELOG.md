@@ -13,9 +13,9 @@ This was a rewrite that makes significant reductions in code size and enhances p
 
 |        | v1.2.8    | v2.0.0   | Reduction |
 | ------ | --------- | -------- | --------- |
-| Raw    | 11.92 KiB | 8.63 KiB | **-28%**  |
-| Gzip   | 4.78 KiB  | 3.62 KiB | **-24%**  |
-| Brotli | 4.35 KiB  | 3.27 KiB | **-25%**  |
+| Raw    | 11.92 KiB | 8.92 KiB | **-25%**  |
+| Gzip   | 4.78 KiB  | 3.74 KiB | **-22%**  |
+| Brotli | 4.35 KiB  | 3.38 KiB | **-22%**  |
 
 ### Changed
 
@@ -25,49 +25,7 @@ This was a rewrite that makes significant reductions in code size and enhances p
 
 ### Removed
 
-- **`momentToFPFormat()`**: Removed niche Moment.js to Flatpickr format converter. If needed, add this to your project:
-
-  ```typescript
-  function momentToFPFormat(format: string): string {
-    return format
-      .replace(/YYYY/g, 'Y')
-      .replace(/YY/g, 'y')
-      .replace(/MMMM/g, 'F')
-      .replace(/MMM/g, '{3}')
-      .replace(/MM/g, '{2}')
-      .replace(/M/g, 'n')
-      .replace(/DD/g, '{5}')
-      .replace(/D/g, 'j')
-      .replace(/dddd/g, 'l')
-      .replace(/ddd/g, 'D')
-      .replace(/dd/g, 'D')
-      .replace(/d/g, 'w')
-      .replace(/HH/g, '{6}')
-      .replace(/H/g, 'G')
-      .replace(/hh/g, 'h')
-      .replace(/mm/g, 'i')
-      .replace(/m/g, 'i')
-      .replace(/ss/g, 'S')
-      .replace(/s/g, 's')
-      .replace(/A/gi, 'K')
-      .replace(/\{3\}/g, 'M')
-      .replace(/\{2\}/g, 'm')
-      .replace(/\{5\}/g, 'd')
-      .replace(/\{6\}/g, 'H')
-  }
-  ```
-
-- **`guessDateParts()`**: Removed complex date inference function. Use `parseDate()` directly instead:
-
-  ```typescript
-  // Old: const { year, month, day } = guessDateParts(str)
-  // New:
-  const d = parseDate(str)
-  if (!isNaN(d.getTime())) {
-    const parts = { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() }
-  }
-  ```
-
+- **`guessDateParts()`**: Removed complex date inference function. Use `parseDate()` directly instead.
 - **`guessDatePart()`**: Removed helper function (was only used internally by `guessDateParts()`).
 
 ## [1.2.8] - 2026-01-18

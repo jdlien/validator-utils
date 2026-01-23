@@ -71,22 +71,6 @@ The following functions have been removed from V2 to reduce bundle size. If you 
 
 #### Removed Functions
 
-**`momentToFPFormat`** - Converts moment.js format strings to Flatpickr format. If you use Flatpickr, add this to your project:
-
-```typescript
-function momentToFPFormat(format: string): string {
-  return format
-    .replace(/YYYY/g, 'Y').replace(/YY/g, 'y')
-    .replace(/MMMM/g, 'F').replace(/MMM/g, '{3}').replace(/MM/g, '{2}').replace(/M/g, 'n')
-    .replace(/DD/g, '{5}').replace(/D/g, 'j')
-    .replace(/dddd/g, 'l').replace(/ddd/g, 'D').replace(/dd/g, 'D').replace(/d/g, 'w')
-    .replace(/HH/g, '{6}').replace(/H/g, 'G').replace(/hh/g, 'h')
-    .replace(/mm/g, 'i').replace(/m/g, 'i').replace(/ss/g, 'S').replace(/s/g, 's')
-    .replace(/A/gi, 'K')
-    .replace(/\{3\}/g, 'M').replace(/\{2\}/g, 'm').replace(/\{5\}/g, 'd').replace(/\{6\}/g, 'H')
-}
-```
-
 **`guessDateParts`** and **`guessDatePart`** - Use `parseDate()` directly:
 
 ```typescript

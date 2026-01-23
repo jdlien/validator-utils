@@ -657,6 +657,77 @@ describe('utils', () => {
     })
   }) // end formatDateTime
 
+  describe('momentToFPFormat', () => {
+    it('should correctly convert YYYY to Y', () => {
+      expect(utils.momentToFPFormat('YYYY-MM-DD')).toEqual('Y-m-d')
+    })
+
+    it('should correctly convert YY to y', () => {
+      expect(utils.momentToFPFormat('YY-MM-DD')).toEqual('y-m-d')
+    })
+
+    it('should correctly convert MMMM to F', () => {
+      expect(utils.momentToFPFormat('YYYY-MMMM-DD')).toEqual('Y-F-d')
+    })
+
+    it('should correctly convert MMM to M', () => {
+      expect(utils.momentToFPFormat('YYYY-MMM-DD')).toEqual('Y-M-d')
+    })
+
+    it('should correctly convert MM to m', () => {
+      expect(utils.momentToFPFormat('YYYY-MM-DD')).toEqual('Y-m-d')
+    })
+
+    it('should correctly convert M to n', () => {
+      expect(utils.momentToFPFormat('YYYY-M-DD')).toEqual('Y-n-d')
+    })
+
+    it('should correctly convert DD to d', () => {
+      expect(utils.momentToFPFormat('YYYY-MM-DD')).toEqual('Y-m-d')
+    })
+
+    it('should correctly convert D to j', () => {
+      expect(utils.momentToFPFormat('YYYY-MM-D')).toEqual('Y-m-j')
+    })
+
+    it('should correctly convert dddd to l', () => {
+      expect(utils.momentToFPFormat('dddd, MMMM DD YYYY')).toEqual('l, F d Y')
+    })
+
+    it('should correctly convert ddd to D', () => {
+      expect(utils.momentToFPFormat('ddd, MMM DD YYYY')).toEqual('D, M d Y')
+    })
+
+    it('should correctly convert dd to D', () => {
+      expect(utils.momentToFPFormat('dd, MMM DD YYYY')).toEqual('D, M d Y')
+    })
+
+    it('should correctly convert d to w', () => {
+      expect(utils.momentToFPFormat('d, MMM DD YYYY')).toEqual('w, M d Y')
+    })
+
+    it('should correctly convert HH to H', () => {
+      expect(utils.momentToFPFormat('HH:mm:ss')).toEqual('H:i:S')
+    })
+
+    it('should correctly convert H to G', () => {
+      expect(utils.momentToFPFormat('H:mm:ss')).toEqual('G:i:S')
+    })
+
+    it('should correctly convert 12hr hh to h unpadded', () => {
+      expect(utils.momentToFPFormat('h:m:s')).toEqual('h:i:s')
+    })
+
+    it('should correctly convert 12hr hh to h padded', () => {
+      expect(utils.momentToFPFormat('hh:mm:ss')).toEqual('h:i:S')
+    })
+
+    it('should correctly convert meridiem', () => {
+      expect(utils.momentToFPFormat('hh:mm A')).toEqual('h:i K')
+      expect(utils.momentToFPFormat('hh:mm a')).toEqual('h:i K')
+    })
+  }) // end momentToFPFormat
+
   describe('parseDateToString', () => {
     it('should return a formatted string for a valid date', () => {
       const value = '2022-01-31'

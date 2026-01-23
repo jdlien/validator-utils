@@ -287,6 +287,23 @@ export function formatDateTime(date: Date | string, format = 'YYYY-MM-DD'): stri
     (match, escaped) => escaped ?? String(tokens[match as keyof typeof tokens]))
 }
 
+const MOMENT_TO_FP_TOKENS: Record<string, string> = {
+  YYYY: 'Y', YY: 'y',
+  MMMM: 'F', MMM: 'M', MM: 'm', M: 'n',
+  DD: 'd', D: 'j',
+  dddd: 'l', ddd: 'D', dd: 'D', d: 'w',
+  HH: 'H', H: 'G', hh: 'h',
+  mm: 'i', m: 'i',
+  ss: 'S', s: 's',
+  A: 'K', a: 'K',
+}
+
+const MOMENT_TO_FP_RE = /YYYY|YY|MMMM|MMM|MM|M|DD|D|dddd|ddd|dd|d|HH|H|hh|mm|m|ss|s|A|a/g
+
+export function momentToFPFormat(format: string): string {
+  return format.replace(MOMENT_TO_FP_RE, (token) => MOMENT_TO_FP_TOKENS[token])
+}
+
 // ============ VALIDATION HELPERS ============
 
 export function isDate(value: string | Date): boolean {
