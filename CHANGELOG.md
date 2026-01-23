@@ -13,9 +13,9 @@ This was a rewrite that makes significant reductions in code size and enhances p
 
 |        | v1.2.8    | v2.0.0   | Reduction |
 | ------ | --------- | -------- | --------- |
-| Raw    | 11.92 KiB | 8.28 KiB | **-31%**  |
-| Gzip   | 4.78 KiB  | 3.43 KiB | **-28%**  |
-| Brotli | 4.35 KiB  | 3.10 KiB | **-29%**  |
+| Raw    | 11.92 KiB | 8.36 KiB | **-30%**  |
+| Gzip   | 4.78 KiB  | 3.48 KiB | **-27%**  |
+| Brotli | 4.35 KiB  | 3.14 KiB | **-28%**  |
 
 ### Changed
 
