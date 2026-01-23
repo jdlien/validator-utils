@@ -2,8 +2,8 @@
 
 ## Introduction
 
-This package is a library of utility functions that can be used for validating and sanitizing
-strings and numbers, especially for use in forms. This package is the dependency for the [@jdlien/validator package](https://github.com/jdlien/validator).
+This package is a lightweight (<9KB or <4KB zipped) library of utility functions that can validate and sanitize
+dates, times, strings, numbers, and more. This is especially useful in forms. This package is the sole dependency for the [@jdlien/validator package](https://github.com/jdlien/validator).
 
 This package was separated from Validator so that it could be used in other projects without
 pulling in the entire Validator package if you only need some of its validation and parsing functions without the form validation and error message functionality.
@@ -12,10 +12,6 @@ pulling in the entire Validator package if you only need some of its validation 
 
 ```bash
 npm install @jdlien/validator-utils
-
-# or
-
-yarn add @jdlien/validator-utils
 ```
 
 ## Utility Functions
@@ -24,9 +20,9 @@ Validator includes several utility functions that may be useful in your own code
 If you wish to use these, you may import the functions directly from the module as an object that contains all the functions:
 
 ```javascript
-import * as validatorUtils from '@jdlien/validator'
+import * as validatorUtils from '@jdlien/validator-utils'
 // you could assign the functions you need to more convenient variables
-const { dateFormat, formatDateTime } = validatorUtils
+const { parseDate, formatDateTime } = validatorUtils
 ```
 
 Here is a list of the utility functions:
@@ -61,43 +57,10 @@ Here is a list of the utility functions:
 - **parseColor**: Parses a color string into a standardized format.
 - **normalizeValidationResult**: Normalizes a validation result (like a boolean or string) into an object with a valid property and a messages array of strings.
 
-## V2 (Lightweight Build)
-
-V2 is an ultra-lightweight rewrite optimized for minimal bundle size. It is 28% smaller in lines of code and 18% smaller in character count while maintaining compatibility with the vast majority of use cases.
-
-### Breaking Changes in V2
-
-The following functions have been removed from V2 to reduce bundle size. If you need these functions, you can implement them yourself using the code snippets below.
-
-#### Removed Functions
-
-**`guessDateParts`** and **`guessDatePart`** - Use `parseDate()` directly:
-
-```typescript
-// Old: const { year, month, day } = guessDateParts(str)
-// New:
-const d = parseDate(str)
-if (isNaN(d.getTime())) throw new Error('Invalid Date')
-const parts = { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() }
-```
-
-### Other V2 Changes
-
-**Email Validation**: V2 uses a simplified email regex that covers standard email formats. Some obscure RFC 5322 edge cases (like quoted local parts with special characters) may not be validated identically to V1. For most applications, this change has no practical impact.
-
 ## Contributing
 
 Install dev dependencies:
 
 ```bash
-npm install
+pnpm install
 ```
-
-When running Vite, you may get an error like
-
-```
-Module did not self-register: '...\node_modules\canvas\build\Release\canvas.node'
-```
-
-If that happens, you
-need to install the canvas module manually: `bash npm rebuild canvas --update-binary `
