@@ -7,11 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0] - Unreleased
 
+### Bundle Size Reduction
+
+| | v1.2.8 | v2.0.0 | Reduction |
+|---|--------|--------|-----------|
+| Raw | 11.92 KiB | 8.35 KiB | **-30%** |
+| Gzip | 4.78 KiB | 3.46 KiB | **-28%** |
+| Brotli | 4.35 KiB | 3.12 KiB | **-28%** |
+
 ### Changed
 
 - **Email validation simplified**: Now uses a practical regex instead of full RFC 5322 compliance. Quoted local parts like `"john doe"@example.com` are no longer accepted. All standard email formats continue to work.
 - **Date parsing rewritten**: The `parseDate()` function now uses streamlined inline logic instead of the multi-pass `guessDateParts()` algorithm. Behavior is equivalent for all common date formats.
-- **Bundle size reduced**: Raw size reduced from ~12KB to 8.4KB (-30%), gzipped from ~4.9KB to 3.5KB (-29%).
 
 ### Removed
 
@@ -41,10 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ```
 
 - **`guessDatePart()`**: Removed helper function (was only used internally by `guessDateParts()`).
-
-### Fixed
-
-- French weekday pattern no longer incorrectly matches "March" (changed `ma` to `mar(?:di|tes)`).
 
 ## [1.2.8] - Previous stable release
 
