@@ -1,7 +1,6 @@
 import * as utils from '../src/validator-utils'
 // @ts-ignore
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-type DateParts = { year: number; month: number; day: number }
 
 describe('utils', () => {
   describe('isFormControl', () => {
@@ -64,72 +63,6 @@ describe('utils', () => {
       expect(utils.isType(textAreaElement, 'text')).toBe(false)
     })
   }) // end isType
-
-  describe.skip('momentToFPFormat - removed in V2', () => {
-    it('should correctly convert YYYY to Y', () => {
-      expect(utils.momentToFPFormat('YYYY-MM-DD')).toEqual('Y-m-d')
-    })
-
-    it('should correctly convert YY to y', () => {
-      expect(utils.momentToFPFormat('YY-MM-DD')).toEqual('y-m-d')
-    })
-
-    it('should correctly convert MMMM to F', () => {
-      expect(utils.momentToFPFormat('YYYY-MMMM-DD')).toEqual('Y-F-d')
-    })
-
-    it('should correctly convert MMM to M', () => {
-      expect(utils.momentToFPFormat('YYYY-MMM-DD')).toEqual('Y-M-d')
-    })
-
-    it('should correctly convert MM to m', () => {
-      expect(utils.momentToFPFormat('YYYY-MM-DD')).toEqual('Y-m-d')
-    })
-
-    it('should correctly convert M to n', () => {
-      expect(utils.momentToFPFormat('YYYY-M-DD')).toEqual('Y-n-d')
-    })
-
-    it('should correctly convert DD to d', () => {
-      expect(utils.momentToFPFormat('YYYY-MM-DD')).toEqual('Y-m-d')
-    })
-
-    it('should correctly convert D to j', () => {
-      expect(utils.momentToFPFormat('YYYY-MM-D')).toEqual('Y-m-j')
-    })
-
-    it('should correctly convert dddd to l', () => {
-      expect(utils.momentToFPFormat('dddd, MMMM DD YYYY')).toEqual('l, F d Y')
-    })
-
-    it('should correctly convert ddd to D', () => {
-      expect(utils.momentToFPFormat('ddd, MMM DD YYYY')).toEqual('D, M d Y')
-    })
-
-    it('should correctly convert dd to D', () => {
-      expect(utils.momentToFPFormat('dd, MMM DD YYYY')).toEqual('D, M d Y')
-    })
-
-    it('should correctly convert d to w', () => {
-      expect(utils.momentToFPFormat('d, MMM DD YYYY')).toEqual('w, M d Y')
-    })
-
-    it('should correctly convert HH to H', () => {
-      expect(utils.momentToFPFormat('HH:mm:ss')).toEqual('H:i:S')
-    })
-
-    it('should correctly convert H to G', () => {
-      expect(utils.momentToFPFormat('H:mm:ss')).toEqual('G:i:S')
-    })
-
-    it('should correctly convert 12hr hh to h unpadded', () => {
-      expect(utils.momentToFPFormat('h:m:s')).toEqual('h:i:s')
-    })
-
-    it('should correctly convert 12hr hh to h padded', () => {
-      expect(utils.momentToFPFormat('hh:mm:ss')).toEqual('h:i:S')
-    })
-  }) // momentToFPFormat
 
   describe('monthToNumber', () => {
     it('returns the correct zero-based month number for numeric input', () => {
@@ -307,63 +240,27 @@ describe('utils', () => {
 
     it('returns correct time when a time is passed', () => {
       expect(utils.parseDate('2001-04-20 4:00p')).toEqual(new Date(2001, 3, 20, 16, 0, 0, 0))
-      //   // expect(utils.parseDate('manana')).toEqual(tomorrow)
-      //   // expect(utils.parseDate('demain')).toEqual(tomorrow)
-    })
-  })
-
-  describe.skip('guessDatePart - removed in V2', () => {
-    it('should return empty array if token cannot be valid month, day, or year', () => {
-      expect(utils.guessDatePart(-1)).toEqual([])
-    })
-  })
-
-  describe.skip('guessDateParts - removed in V2', () => {
-    it('should return a valid date object given a valid date string', () => {
-      const str = '25 12 2022'
-      const result: DateParts = { day: 25, month: 12, year: 2022 }
-      expect(utils.guessDateParts(str)).toEqual(result)
     })
 
-    it('throws an error if the date is invalid', () => {
-      expect(() => utils.guessDateParts('1234')).toThrow('Invalid Date')
+    // Date inference tests (previously tested via guessDateParts)
+    it('parses space-separated date with day > 12', () => {
+      expect(utils.parseDate('25 12 2022')).toEqual(new Date(2022, 11, 25))
     })
 
-    it('throws an error for invalid date strings', () => {
-      const invalidDateString = '*&bcd efgh'
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-      expect(() => utils.guessDateParts(invalidDateString)).toThrowError('Invalid Date')
-      expect(consoleError).toHaveBeenCalledWith(`not date because *&bcd isNaN`)
-      consoleError.mockRestore()
+    it('returns Invalid Date for ambiguous 4-digit input', () => {
+      expect(utils.parseDate('1234').getTime()).toBeNaN()
     })
 
-    it('should correctly assign year if meanings includes y', () => {
-      const dateString = '1 2 3'
-      const date = utils.guessDateParts(dateString)
-      expect(date.year).toBe(2003)
+    it('returns Invalid Date for garbage input', () => {
+      expect(utils.parseDate('*&bcd efgh').getTime()).toBeNaN()
     })
 
-    // it('should return an error given an invalid date string', () => {
-    //   const str = '31 22 2022'
-    //   expect(() => utils.guessDateParts(str)).toThrowError('Invalid Date')
-    // })
-
-    // it('should return a valid date object given a two-token date string', () => {
-    //   const str = '12 2022'
-    //   const result: DateParts = { day: new Date().getDate(), month: 12, year: 2022 }
-    //   expect(utils.guessDateParts(str)).toEqual(result)
-    // })
-
-    // it('should return a valid date object given a one-token date string', () => {
-    //   const str = '2022'
-    //   const result: DateParts = {
-    //     day: new Date().getDate(),
-    //     month: new Date().getMonth() + 1,
-    //     year: 2022,
-    //   }
-    //   expect(utils.guessDateParts(str)).toEqual(result)
-    // })
+    it('infers 2-digit year correctly for ambiguous dates', () => {
+      const result = utils.parseDate('1 2 3')
+      expect(result.getFullYear()).toBe(2003)
+      expect(result.getMonth()).toBe(0) // January
+      expect(result.getDate()).toBe(2)
+    })
   })
 
   describe('parseTime', () => {

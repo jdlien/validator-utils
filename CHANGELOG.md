@@ -1,0 +1,51 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [2.0.0] - Unreleased
+
+### Changed
+
+- **Email validation simplified**: Now uses a practical regex instead of full RFC 5322 compliance. Quoted local parts like `"john doe"@example.com` are no longer accepted. All standard email formats continue to work.
+- **Date parsing rewritten**: The `parseDate()` function now uses streamlined inline logic instead of the multi-pass `guessDateParts()` algorithm. Behavior is equivalent for all common date formats.
+- **Bundle size reduced**: Raw size reduced from ~12KB to 8.4KB (-30%), gzipped from ~4.9KB to 3.5KB (-29%).
+
+### Removed
+
+- **`momentToFPFormat()`**: Removed niche Moment.js to Flatpickr format converter. If needed, add this to your project:
+  ```typescript
+  function momentToFPFormat(format: string): string {
+    return format
+      .replace(/YYYY/g, 'Y').replace(/YY/g, 'y')
+      .replace(/MMMM/g, 'F').replace(/MMM/g, '{3}').replace(/MM/g, '{2}').replace(/M/g, 'n')
+      .replace(/DD/g, '{5}').replace(/D/g, 'j')
+      .replace(/dddd/g, 'l').replace(/ddd/g, 'D').replace(/dd/g, 'D').replace(/d/g, 'w')
+      .replace(/HH/g, '{6}').replace(/H/g, 'G').replace(/hh/g, 'h')
+      .replace(/mm/g, 'i').replace(/m/g, 'i').replace(/ss/g, 'S').replace(/s/g, 's')
+      .replace(/A/gi, 'K')
+      .replace(/\{3\}/g, 'M').replace(/\{2\}/g, 'm').replace(/\{5\}/g, 'd').replace(/\{6\}/g, 'H')
+  }
+  ```
+
+- **`guessDateParts()`**: Removed complex date inference function. Use `parseDate()` directly instead:
+  ```typescript
+  // Old: const { year, month, day } = guessDateParts(str)
+  // New:
+  const d = parseDate(str)
+  if (!isNaN(d.getTime())) {
+    const parts = { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() }
+  }
+  ```
+
+- **`guessDatePart()`**: Removed helper function (was only used internally by `guessDateParts()`).
+
+### Fixed
+
+- French weekday pattern no longer incorrectly matches "March" (changed `ma` to `mar(?:di|tes)`).
+
+## [1.2.8] - Previous stable release
+
+See git history for changes prior to 2.0.0.
