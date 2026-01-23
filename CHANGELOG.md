@@ -7,13 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0] - Unreleased
 
+This was a rewrite that makes significant reductions in code size and enhances performance with minimal functional differences in behavior.
+
 ### Bundle Size Reduction
 
-| | v1.2.8 | v2.0.0 | Reduction |
-|---|--------|--------|-----------|
-| Raw | 11.92 KiB | 8.35 KiB | **-30%** |
-| Gzip | 4.78 KiB | 3.46 KiB | **-28%** |
-| Brotli | 4.35 KiB | 3.12 KiB | **-28%** |
+|        | v1.2.8    | v2.0.0   | Reduction |
+| ------ | --------- | -------- | --------- |
+| Raw    | 11.92 KiB | 8.28 KiB | **-31%**  |
+| Gzip   | 4.78 KiB  | 3.43 KiB | **-28%**  |
+| Brotli | 4.35 KiB  | 3.10 KiB | **-29%**  |
 
 ### Changed
 
@@ -23,21 +25,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - **`momentToFPFormat()`**: Removed niche Moment.js to Flatpickr format converter. If needed, add this to your project:
+
   ```typescript
   function momentToFPFormat(format: string): string {
     return format
-      .replace(/YYYY/g, 'Y').replace(/YY/g, 'y')
-      .replace(/MMMM/g, 'F').replace(/MMM/g, '{3}').replace(/MM/g, '{2}').replace(/M/g, 'n')
-      .replace(/DD/g, '{5}').replace(/D/g, 'j')
-      .replace(/dddd/g, 'l').replace(/ddd/g, 'D').replace(/dd/g, 'D').replace(/d/g, 'w')
-      .replace(/HH/g, '{6}').replace(/H/g, 'G').replace(/hh/g, 'h')
-      .replace(/mm/g, 'i').replace(/m/g, 'i').replace(/ss/g, 'S').replace(/s/g, 's')
+      .replace(/YYYY/g, 'Y')
+      .replace(/YY/g, 'y')
+      .replace(/MMMM/g, 'F')
+      .replace(/MMM/g, '{3}')
+      .replace(/MM/g, '{2}')
+      .replace(/M/g, 'n')
+      .replace(/DD/g, '{5}')
+      .replace(/D/g, 'j')
+      .replace(/dddd/g, 'l')
+      .replace(/ddd/g, 'D')
+      .replace(/dd/g, 'D')
+      .replace(/d/g, 'w')
+      .replace(/HH/g, '{6}')
+      .replace(/H/g, 'G')
+      .replace(/hh/g, 'h')
+      .replace(/mm/g, 'i')
+      .replace(/m/g, 'i')
+      .replace(/ss/g, 'S')
+      .replace(/s/g, 's')
       .replace(/A/gi, 'K')
-      .replace(/\{3\}/g, 'M').replace(/\{2\}/g, 'm').replace(/\{5\}/g, 'd').replace(/\{6\}/g, 'H')
+      .replace(/\{3\}/g, 'M')
+      .replace(/\{2\}/g, 'm')
+      .replace(/\{5\}/g, 'd')
+      .replace(/\{6\}/g, 'H')
   }
   ```
 
 - **`guessDateParts()`**: Removed complex date inference function. Use `parseDate()` directly instead:
+
   ```typescript
   // Old: const { year, month, day } = guessDateParts(str)
   // New:

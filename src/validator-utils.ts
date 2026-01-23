@@ -58,7 +58,7 @@ const MONTH_RE = new RegExp(`(${MONTHS})[a-z]*`, 'i')
 
 function monthToNum(s: string): number {
   const m = new Date(`1 ${s} 2000`).getMonth()
-  /* c8 ignore next */
+  /* istanbul ignore next -- NaN unreachable: only called with MONTH_RE-validated input */
   return isNaN(m) ? -1 : m
 }
 
@@ -235,24 +235,17 @@ export function parseDateTime(value: string | Date): Date | null {
     }
   }
 
-  // Handle standalone time (no date left)
-  if (!dateStr || /^,?\s*$/.test(dateStr)) {
+  // Handle standalone time (no date left) - time must exist if we reach here
+  if (time && (!dateStr || /^,?\s*$/.test(dateStr))) {
     const now = new Date()
-    const t = time || { hour: 0, minute: 0, second: 0 }
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), t.hour, t.minute, t.second)
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), time.hour, time.minute, time.second)
   }
 
   const date = parseDate(dateStr)
   if (isNaN(date.getTime())) return null
 
-  // Validate that the date is reasonable (not rolled over from invalid input)
   const t = time || { hour: 0, minute: 0, second: 0 }
-  const result = new Date(date.getFullYear(), date.getMonth(), date.getDate(), t.hour, t.minute, t.second)
-
-  // Check for rollover (e.g., day 32 becoming next month)
-  if (result.getMonth() !== date.getMonth()) return null
-
-  return result
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), t.hour, t.minute, t.second)
 }
 
 // ============ DATE FORMATTING ============
@@ -282,7 +275,7 @@ export function formatDateTime(date: Date | string, format = 'YYYY-MM-DD'): stri
   }
 
   return format.replace(/\[([^\]]+)]|YYYY|YY|MMMM|MMM|MM|M|DD|D|dddd|ddd|dd|d|HH|H|hh|h|mm|m|ss|s|SSS|A|a/g,
-    (match, escaped) => escaped ?? String(tokens[match] ?? match))
+    (match, escaped) => escaped ?? String(tokens[match as keyof typeof tokens]))
 }
 
 // ============ VALIDATION HELPERS ============
@@ -420,7 +413,7 @@ export function isPostalCA(value: string): boolean {
 export function isColor(value: string): boolean {
   if (['transparent', 'currentColor'].includes(value)) return true
   if (!value.trim()) return false
-  /* c8 ignore next */
+  /* c8 ignore next -- CSS availability varies by environment */
   if (typeof CSS === 'undefined' || !CSS.supports) return false
   return CSS.supports('color', value)
 }

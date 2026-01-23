@@ -606,6 +606,14 @@ describe('utils', () => {
       expect(utils.formatDateTime(date, '[Today is] YYYY-MM-DD')).toEqual('Today is 2022-01-01')
       expect(utils.formatDateTime(date, 'YYYY [at] HH:mm')).toEqual('2022 at 12:00')
     })
+
+    it('should accept string date input', () => {
+      expect(utils.formatDateTime('2022-01-15', 'MMMM D, YYYY')).toEqual('January 15, 2022')
+    })
+
+    it('should return empty string for invalid date', () => {
+      expect(utils.formatDateTime('not a date', 'YYYY-MM-DD')).toEqual('')
+    })
   }) // end formatDateTime
 
   describe('parseDateToString', () => {
@@ -1331,6 +1339,8 @@ describe('utils', () => {
 
     it('should return false for invalid CSS colors', function () {
       const invalidColors = [
+        '',
+        '   ',
         '#f5f5f',
         'asdf',
         'browne',
