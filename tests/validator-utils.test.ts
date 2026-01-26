@@ -861,21 +861,244 @@ describe('utils', () => {
   })
 
   describe('isDateInRange', () => {
+    // Use start of day for 'today' to avoid issues where noon might be in the future
     const today = new Date()
+    today.setHours(0, 0, 0, 0)
     const tomorrow = new Date(today)
     tomorrow.setDate(today.getDate() + 1)
     const yesterday = new Date(today)
     yesterday.setDate(today.getDate() - 1)
 
-    it('should return true if date is in range', function () {
-      expect(utils.isDateInRange(today, 'future')).toBe(true)
-      expect(utils.isDateInRange(yesterday, 'future')).toBe(false)
-      expect(utils.isDateInRange(tomorrow, 'future')).toBe(true)
-      expect(utils.isDateInRange(today, 'past')).toBe(true)
-      expect(utils.isDateInRange(yesterday, 'past')).toBe(true)
-      expect(utils.isDateInRange(tomorrow, 'past')).toBe(false)
+    describe('legacy keywords', () => {
+      it('should return true if date is in range', function () {
+        expect(utils.isDateInRange(today, 'future')).toBe(true)
+        expect(utils.isDateInRange(yesterday, 'future')).toBe(false)
+        expect(utils.isDateInRange(tomorrow, 'future')).toBe(true)
+        expect(utils.isDateInRange(today, 'past')).toBe(true)
+        expect(utils.isDateInRange(yesterday, 'past')).toBe(true)
+        expect(utils.isDateInRange(tomorrow, 'past')).toBe(false)
+      })
+    })
+
+    describe('today keyword', () => {
+      it('returns true for today', () => {
+        expect(utils.isDateInRange(today, 'today')).toBe(true)
+      })
+
+      it('returns false for yesterday', () => {
+        expect(utils.isDateInRange(yesterday, 'today')).toBe(false)
+      })
+
+      it('returns false for tomorrow', () => {
+        expect(utils.isDateInRange(tomorrow, 'today')).toBe(false)
+      })
+    })
+
+    describe('specific date ranges', () => {
+      it('validates date within range', () => {
+        expect(utils.isDateInRange(new Date(2023, 5, 15), '2023-01-01:2023-12-31')).toBe(true)
+      })
+
+      it('rejects date before range', () => {
+        expect(utils.isDateInRange(new Date(2022, 5, 15), '2023-01-01:2023-12-31')).toBe(false)
+      })
+
+      it('rejects date after range', () => {
+        expect(utils.isDateInRange(new Date(2024, 5, 15), '2023-01-01:2023-12-31')).toBe(false)
+      })
+
+      it('includes boundary dates', () => {
+        expect(utils.isDateInRange(new Date(2023, 0, 1), '2023-01-01:2023-12-31')).toBe(true)
+        expect(utils.isDateInRange(new Date(2023, 11, 31), '2023-01-01:2023-12-31')).toBe(true)
+      })
+
+      it('handles single date (exact match)', () => {
+        expect(utils.isDateInRange(new Date(2023, 5, 15), '2023-06-15')).toBe(true)
+        expect(utils.isDateInRange(new Date(2023, 5, 16), '2023-06-15')).toBe(false)
+      })
+    })
+
+    describe('open-ended ranges', () => {
+      it('validates :DATE (on or before)', () => {
+        expect(utils.isDateInRange(new Date(2020, 0, 1), ':2025-12-31')).toBe(true)
+        expect(utils.isDateInRange(new Date(2026, 0, 1), ':2025-12-31')).toBe(false)
+      })
+
+      it('validates DATE: (on or after)', () => {
+        expect(utils.isDateInRange(new Date(2025, 0, 1), '2020-01-01:')).toBe(true)
+        expect(utils.isDateInRange(new Date(2019, 0, 1), '2020-01-01:')).toBe(false)
+      })
+    })
+
+    describe('relative offsets', () => {
+      it('validates -30d:+30d (within 30 days)', () => {
+        expect(utils.isDateInRange(today, '-30d:+30d')).toBe(true)
+
+        const within = new Date(today)
+        within.setDate(within.getDate() + 15)
+        expect(utils.isDateInRange(within, '-30d:+30d')).toBe(true)
+
+        const outside = new Date(today)
+        outside.setDate(outside.getDate() + 45)
+        expect(utils.isDateInRange(outside, '-30d:+30d')).toBe(false)
+      })
+
+      it('validates -1y: (within last year to unlimited)', () => {
+        expect(utils.isDateInRange(today, '-1y:')).toBe(true)
+
+        const twoYearsAgo = new Date(today)
+        twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
+        expect(utils.isDateInRange(twoYearsAgo, '-1y:')).toBe(false)
+      })
+
+      it('validates :+6m (up to 6 months from now)', () => {
+        const threeMonths = new Date(today)
+        threeMonths.setMonth(threeMonths.getMonth() + 3)
+        expect(utils.isDateInRange(threeMonths, ':+6m')).toBe(true)
+
+        const nineMonths = new Date(today)
+        nineMonths.setMonth(nineMonths.getMonth() + 9)
+        expect(utils.isDateInRange(nineMonths, ':+6m')).toBe(false)
+      })
+
+      it('supports weeks', () => {
+        const oneWeek = new Date(today)
+        oneWeek.setDate(oneWeek.getDate() + 7)
+        expect(utils.isDateInRange(oneWeek, '-2w:+2w')).toBe(true)
+
+        const threeWeeks = new Date(today)
+        threeWeeks.setDate(threeWeeks.getDate() + 21)
+        expect(utils.isDateInRange(threeWeeks, '-2w:+2w')).toBe(false)
+      })
+
+    it('supports years', () => {
+      const sixMonths = new Date(today)
+      sixMonths.setMonth(sixMonths.getMonth() + 6)
+      expect(utils.isDateInRange(sixMonths, '-1y:+1y')).toBe(true)
+    })
+
+    describe('date-time ranges', () => {
+      it('handles explicit time bounds', () => {
+        const start = new Date(2024, 0, 1, 12, 0)
+        const mid = new Date(2024, 0, 1, 13, 0)
+        const end = new Date(2024, 0, 1, 14, 0)
+        const after = new Date(2024, 0, 1, 15, 0)
+        expect(utils.isDateInRange(start, '2024-01-01T12:00:2024-01-01T14:00')).toBe(true)
+        expect(utils.isDateInRange(mid, '2024-01-01T12:00:2024-01-01T14:00')).toBe(true)
+        expect(utils.isDateInRange(end, '2024-01-01T12:00:2024-01-01T14:00')).toBe(true)
+        expect(utils.isDateInRange(after, '2024-01-01T12:00:2024-01-01T14:00')).toBe(false)
+      })
+
+      it('treats a single date-time with colons as exact match', () => {
+        const exact = new Date(2024, 0, 1, 12, 30)
+        const differentTime = new Date(2024, 0, 1, 12, 31)
+        expect(utils.isDateInRange(exact, '2024-01-01T12:30')).toBe(true)
+        expect(utils.isDateInRange(differentTime, '2024-01-01T12:30')).toBe(false)
+      })
+
+      it('supports time with spaces and meridiem', () => {
+        const exact = new Date(2024, 0, 1, 12, 0)
+        const different = new Date(2024, 0, 1, 12, 1)
+        expect(utils.isDateInRange(exact, '2024-01-01 12:00 PM')).toBe(true)
+        expect(utils.isDateInRange(different, '2024-01-01 12:00 PM')).toBe(false)
+      })
+
+      it('keeps date-only ranges inclusive when no time is present', () => {
+        const late = new Date(2024, 0, 1, 23, 59, 59)
+        expect(utils.isDateInRange(late, '2024-01-01:2024-01-01')).toBe(true)
+      })
+    })
+    })
+
+    describe('backward compatibility', () => {
+      it('still handles invalid ranges gracefully', () => {
+        // Invalid ranges should return true (allow) for backward compatibility
+        expect(utils.isDateInRange(today, 'invalid')).toBe(true)
+        expect(utils.isDateInRange(today, '2024-99-99')).toBe(true)
+      })
     })
   }) // end isDateInRange
+
+  describe('parseRelativeDate', () => {
+    it('parses days', () => {
+      const result = utils.parseRelativeDate('-30d')
+      const expected = new Date()
+      expected.setHours(0, 0, 0, 0)
+      expected.setDate(expected.getDate() - 30)
+      expect(result?.toDateString()).toBe(expected.toDateString())
+    })
+
+    it('parses positive days', () => {
+      const result = utils.parseRelativeDate('+7d')
+      const expected = new Date()
+      expected.setHours(0, 0, 0, 0)
+      expected.setDate(expected.getDate() + 7)
+      expect(result?.toDateString()).toBe(expected.toDateString())
+    })
+
+    it('parses positive days without sign', () => {
+      const result = utils.parseRelativeDate('30d')
+      const expected = new Date()
+      expected.setHours(0, 0, 0, 0)
+      expected.setDate(expected.getDate() + 30)
+      expect(result?.toDateString()).toBe(expected.toDateString())
+    })
+
+    it('parses zero-day offset', () => {
+      const result = utils.parseRelativeDate('0d')
+      const expected = new Date()
+      expected.setHours(0, 0, 0, 0)
+      expect(result?.toDateString()).toBe(expected.toDateString())
+    })
+
+    it('parses weeks', () => {
+      const result = utils.parseRelativeDate('+2w')
+      const expected = new Date()
+      expected.setHours(0, 0, 0, 0)
+      expected.setDate(expected.getDate() + 14)
+      expect(result?.toDateString()).toBe(expected.toDateString())
+    })
+
+    it('parses months', () => {
+      const result = utils.parseRelativeDate('+3m')
+      const expected = new Date()
+      expected.setHours(0, 0, 0, 0)
+      expected.setMonth(expected.getMonth() + 3)
+      expect(result?.toDateString()).toBe(expected.toDateString())
+    })
+
+    it('parses negative months', () => {
+      const result = utils.parseRelativeDate('-6m')
+      const expected = new Date()
+      expected.setHours(0, 0, 0, 0)
+      expected.setMonth(expected.getMonth() - 6)
+      expect(result?.toDateString()).toBe(expected.toDateString())
+    })
+
+    it('parses years', () => {
+      const result = utils.parseRelativeDate('-1y')
+      const expected = new Date()
+      expected.setHours(0, 0, 0, 0)
+      expected.setFullYear(expected.getFullYear() - 1)
+      expect(result?.toDateString()).toBe(expected.toDateString())
+    })
+
+    it('parses uppercase units', () => {
+      const result = utils.parseRelativeDate('+2W')
+      const expected = new Date()
+      expected.setHours(0, 0, 0, 0)
+      expected.setDate(expected.getDate() + 14)
+      expect(result?.toDateString()).toBe(expected.toDateString())
+    })
+
+    it('returns null for invalid format', () => {
+      expect(utils.parseRelativeDate('-30')).toBeNull() // missing unit
+      expect(utils.parseRelativeDate('invalid')).toBeNull()
+      expect(utils.parseRelativeDate('')).toBeNull()
+      expect(utils.parseRelativeDate('-d')).toBeNull() // missing number
+      expect(utils.parseRelativeDate('+-30d')).toBeNull() // double sign
+    })
+  }) // end parseRelativeDate
 
   describe('isMeridiem', () => {
     it('should return true if the value is a valid meridiem string', () => {
@@ -1082,6 +1305,118 @@ describe('utils', () => {
       expect(utils.isInteger('123abc')).toBe(false)
       expect(utils.isInteger('abc123')).toBe(false)
       expect(utils.isInteger('123.456')).toBe(false)
+    })
+  })
+
+  describe('parseBytes', () => {
+    it('parses plain numbers', () => {
+      expect(utils.parseBytes('500000')).toBe(500000)
+      expect(utils.parseBytes('0')).toBe(0)
+      expect(utils.parseBytes('1.5')).toBe(1.5)
+    })
+
+    it('parses naked and trailing decimals', () => {
+      expect(utils.parseBytes('.5')).toBe(0.5)
+      expect(utils.parseBytes('.5MB')).toBe(500000)
+      expect(utils.parseBytes('1.')).toBe(1)
+      expect(utils.parseBytes('1.KB')).toBe(1000)
+    })
+
+    it('parses KB values', () => {
+      expect(utils.parseBytes('1K')).toBe(1000)
+      expect(utils.parseBytes('1KB')).toBe(1000)
+      expect(utils.parseBytes('5kb')).toBe(5000)
+      expect(utils.parseBytes('2.5KB')).toBe(2500)
+    })
+
+    it('parses MB values', () => {
+      expect(utils.parseBytes('1M')).toBe(1000000)
+      expect(utils.parseBytes('1MB')).toBe(1000000)
+      expect(utils.parseBytes('5mb')).toBe(5000000)
+      expect(utils.parseBytes('2.5MB')).toBe(2500000)
+    })
+
+    it('parses GB values', () => {
+      expect(utils.parseBytes('1G')).toBe(1000000000)
+      expect(utils.parseBytes('1GB')).toBe(1000000000)
+      expect(utils.parseBytes('2gb')).toBe(2000000000)
+    })
+
+    it('parses TB values', () => {
+      expect(utils.parseBytes('1T')).toBe(1000000000000)
+      expect(utils.parseBytes('1TB')).toBe(1000000000000)
+    })
+
+    it('parses B suffix', () => {
+      expect(utils.parseBytes('500B')).toBe(500)
+      expect(utils.parseBytes('500b')).toBe(500)
+    })
+
+    it('handles whitespace', () => {
+      expect(utils.parseBytes('  5MB  ')).toBe(5000000)
+      expect(utils.parseBytes('5 MB')).toBe(5000000)
+    })
+
+    it('returns NaN for invalid values', () => {
+      expect(utils.parseBytes('')).toBeNaN()
+      expect(utils.parseBytes('abc')).toBeNaN()
+      expect(utils.parseBytes('MB')).toBeNaN()
+    })
+
+    it('parses binary KiB/MiB/GiB/TiB values', () => {
+      expect(utils.parseBytes('1KiB')).toBe(1024)
+      expect(utils.parseBytes('1Ki')).toBe(1024)
+      expect(utils.parseBytes('1MiB')).toBe(1048576)
+      expect(utils.parseBytes('1GiB')).toBe(1073741824)
+      expect(utils.parseBytes('1TiB')).toBe(1099511627776)
+    })
+
+    it('parses mixed case binary units', () => {
+      expect(utils.parseBytes('5kib')).toBe(5 * 1024)
+      expect(utils.parseBytes('5KIB')).toBe(5 * 1024)
+      expect(utils.parseBytes('2.5MiB')).toBe(2.5 * 1024 * 1024)
+    })
+  })
+
+  describe('formatBytes', () => {
+    it('formats bytes for values under 1 KB (decimal)', () => {
+      expect(utils.formatBytes(0)).toBe('0 B')
+      expect(utils.formatBytes(1)).toBe('1 B')
+      expect(utils.formatBytes(512)).toBe('512 B')
+      expect(utils.formatBytes(999)).toBe('999 B')
+    })
+
+    it('formats kilobytes for values 1 KB and above (decimal)', () => {
+      expect(utils.formatBytes(1000)).toBe('1 KB')
+      expect(utils.formatBytes(1500)).toBe('1.5 KB')
+      expect(utils.formatBytes(10000)).toBe('10 KB')
+    })
+
+    it('formats 999999 bytes as 1 MB not 1000 KB (boundary rounding)', () => {
+      expect(utils.formatBytes(999999)).toBe('1 MB')
+    })
+
+    it('formats megabytes for values 1 MB and above (decimal)', () => {
+      expect(utils.formatBytes(1000000)).toBe('1 MB')
+      expect(utils.formatBytes(1500000)).toBe('1.5 MB')
+      expect(utils.formatBytes(10000000)).toBe('10 MB')
+      expect(utils.formatBytes(100000000)).toBe('100 MB')
+    })
+
+    it('formats gigabytes for values 1 GB and above (decimal)', () => {
+      expect(utils.formatBytes(1000000000)).toBe('1 GB')
+      expect(utils.formatBytes(2500000000)).toBe('2.5 GB')
+    })
+
+    it('formats terabytes for values 1 TB and above (decimal)', () => {
+      expect(utils.formatBytes(1000000000000)).toBe('1 TB')
+    })
+
+    it('uses binary mode when decimal=false', () => {
+      expect(utils.formatBytes(1024, false)).toBe('1 KB')
+      expect(utils.formatBytes(1536, false)).toBe('1.5 KB')
+      expect(utils.formatBytes(1048576, false)).toBe('1 MB')
+      expect(utils.formatBytes(1073741824, false)).toBe('1 GB')
     })
   })
 

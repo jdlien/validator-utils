@@ -353,9 +353,127 @@ export function monthToNumber(str: string | number): number {
   throw new Error('Invalid month name: ' + str)
 }
 
+/**
+ * Parses a relative date offset like "-30d", "+2w", "30d", "-6m", "+1y"
+ * Returns a Date object relative to today, or null if invalid
+ */
+export function parseRelativeDate(offset: string): Date | null {
+  const match = offset.match(/^([+-])?(\d+)([dwmy])$/i)
+  if (!match) return null
+
+  const [, sign, numStr, unit] = match
+  const num = parseInt(numStr) * (sign === '-' ? -1 : 1)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  switch (unit.toLowerCase()) {
+    case 'd':
+      today.setDate(today.getDate() + num)
+      break
+    case 'w':
+      today.setDate(today.getDate() + num * 7)
+      break
+    case 'm':
+      today.setMonth(today.getMonth() + num)
+      break
+    case 'y':
+      today.setFullYear(today.getFullYear() + num)
+      break
+  }
+
+  return today
+}
+
+const TIME_TOKEN_RE = /(\d{1,2}:\d{2}|\d{1,2}\.\d{2}|\b\d{1,2}\s*[ap]\b|\b[ap]\.?m\.?\b|\bnoon\b|\bnow\b|T\d{1,2})/i
+const DATE_TOKEN_RE = /(\d{1,2}[-/.]\d{1,2}(?:[-/.]\d{2,4})?|\b\d{4}\b|\b\d{6,8}\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\b|\btoday\b|\btomorrow\b|\byesterday\b)/i
+
 export function isDateInRange(date: Date, range: string): boolean {
-  if (range === 'past' && date > new Date()) return false
-  if (range === 'future' && date.getTime() < new Date().setHours(0, 0, 0, 0)) return false
+  // Handle legacy keywords
+  if (range === 'past') {
+    return date <= new Date()
+  }
+  if (range === 'future') {
+    return date.getTime() >= new Date().setHours(0, 0, 0, 0)
+  }
+  if (range === 'today') {
+    const today = new Date()
+    return (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    )
+  }
+
+  const parseBound = (input: string): { date: Date | null; hasTime: boolean; valid: boolean } => {
+    const trimmed = input.trim()
+    if (!trimmed) return { date: null, hasTime: false, valid: true }
+    const rel = parseRelativeDate(trimmed)
+    if (rel) return { date: rel, hasTime: false, valid: true }
+    const dateIndex = trimmed.search(DATE_TOKEN_RE)
+    if (dateIndex === -1) return { date: null, hasTime: false, valid: false }
+    const timeIndex = trimmed.search(TIME_TOKEN_RE)
+    if (timeIndex !== -1 && timeIndex < dateIndex) return { date: null, hasTime: false, valid: false }
+    const dt = parseDateTime(trimmed)
+    if (dt && !isNaN(dt.getTime())) {
+      return { date: dt, hasTime: TIME_TOKEN_RE.test(trimmed), valid: true }
+    }
+    return { date: null, hasTime: false, valid: false }
+  }
+
+  // Parse range with colon delimiter (try each colon as the splitter)
+  let parsed: { start: ReturnType<typeof parseBound>; end: ReturnType<typeof parseBound> } | null = null
+  if (range.includes(':')) {
+    for (let i = 0; i < range.length; i += 1) {
+      if (range[i] !== ':') continue
+      const start = parseBound(range.slice(0, i))
+      const end = parseBound(range.slice(i + 1))
+      if (start.valid && end.valid) {
+        parsed = { start, end }
+        break
+      }
+    }
+  }
+
+  if (!parsed) {
+    // No valid range split - try to parse as a single date (exact match)
+    const exact = parseBound(range)
+    if (exact.valid && exact.date) {
+      if (exact.hasTime) return date.getTime() === exact.date.getTime()
+      return (
+        date.getFullYear() === exact.date.getFullYear() &&
+        date.getMonth() === exact.date.getMonth() &&
+        date.getDate() === exact.date.getDate()
+      )
+    }
+    return true // Invalid format, allow (backward compatible)
+  }
+
+  const start = parsed.start
+  const end = parsed.end
+
+  const useTime = start.hasTime || end.hasTime
+  const dateVal = useTime
+    ? date.getTime()
+    : new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+
+  let startVal: number | null = null
+  if (start.date) {
+    startVal = start.hasTime
+      ? start.date.getTime()
+      : new Date(start.date.getFullYear(), start.date.getMonth(), start.date.getDate()).getTime()
+  }
+
+  let endVal: number | null = null
+  if (end.date) {
+    endVal = end.hasTime
+      ? end.date.getTime()
+      : new Date(end.date.getFullYear(), end.date.getMonth(), end.date.getDate(), 23, 59, 59, 999).getTime()
+  }
+
+  // Check bounds
+  if (startVal !== null && dateVal < startVal) return false
+  if (endVal !== null && dateVal > endVal) return false
+
   return true
 }
 
@@ -426,6 +544,57 @@ export function parseNumber(value: string): string {
 
 export function isNumber(value: string): boolean {
   return NUMBER_RE.test(value)
+}
+
+// ============ BYTE SIZE PARSING ============
+
+// Multiplier maps for parseBytes (hoisted for performance)
+const SI_MULT: Record<string, number> = { '': 1, K: 1000, M: 1e6, G: 1e9, T: 1e12 }
+const BINARY_MULT: Record<string, number> = { '': 1, K: 1024, M: 1024 ** 2, G: 1024 ** 3, T: 1024 ** 4 }
+
+/**
+ * Parses a human-readable byte size string into bytes.
+ * Accepts: 500, 5B, 5K, 5KB, 5KiB, 5Ki, 5M, 5MB, 5MiB, etc.
+ * SI units (KB, MB) use powers of 1000; binary units (KiB, MiB) use powers of 1024.
+ * Returns NaN for invalid input.
+ */
+export function parseBytes(value: string): number {
+  const str = value.trim()
+  const match = str.match(/^(\d+(?:\.\d*)?|\.\d+)\s*(B|Ki?B?|Mi?B?|Gi?B?|Ti?B?)?$/i)
+  if (!match) return NaN
+
+  const num = Number.parseFloat(match[1])
+  const rawUnit = match[2]?.toUpperCase() || ''
+  const isBinary = rawUnit.includes('I')
+  const prefix = rawUnit.replace(/I?B$/i, '').replace(/I$/i, '') || ''
+  const mult = isBinary ? BINARY_MULT : SI_MULT
+  return num * mult[prefix]
+}
+
+/**
+ * Formats bytes as a human-readable string.
+ * @param bytes - The number of bytes
+ * @param decimal - If true (default), uses SI units (1000-based). If false, uses binary (1024-based).
+ * @returns Formatted string like "1.5 MB" or "512 B"
+ */
+export function formatBytes(bytes: number, decimal = true): string {
+  const base = decimal ? 1000 : 1024
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  if (bytes < base) return `${bytes} B`
+
+  let i = 0
+  let val = bytes
+  while (val >= base && i < units.length - 1) {
+    val /= base
+    i++
+  }
+  let rounded = Math.round(val * 10) / 10
+  // If rounding pushed us to next unit threshold, bump up
+  if (rounded >= base && i < units.length - 1) {
+    rounded = 1
+    i++
+  }
+  return `${rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(1)} ${units[i]}`
 }
 
 // ============ URL VALIDATION ============
