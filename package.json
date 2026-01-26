@@ -5,10 +5,10 @@
   "packageManager": "pnpm@10.11.0",
   "main": "dist/validator-utils.cjs",
   "module": "dist/validator-utils.mjs",
-  "types": "dist/validator-utils.d.ts",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/validator-utils.d.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/validator-utils.mjs",
       "require": "./dist/validator-utils.cjs",
       "default": "./dist/validator-utils.mjs"
