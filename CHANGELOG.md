@@ -5,7 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - Unreleased
+## [2.1.0] - 2026-01-26
+
+### Added
+
+- **ESM, CommonJS, and UMD builds**: Now ships three module formats for maximum compatibility
+  - `validator-utils.mjs` (ESM) - for modern bundlers and `import` statements
+  - `validator-utils.cjs` (CommonJS) - for `require()` in Node.js
+  - `validator-utils.js` (UMD) - for `<script>` tags and CDNs (exposes `window.validatorUtils`)
+- **Proper `exports` field**: Conditional exports for seamless ESM/CJS resolution
+- **CDN support**: `unpkg` and `jsdelivr` fields for direct browser usage
+
+### Bundle Sizes
+
+|        | ESM       | CJS      | UMD      |
+| ------ | --------- | -------- | -------- |
+| Raw    | 11.54 KiB | 9.11 KiB | 9.13 KiB |
+| Gzip   | 4.06 KiB  | 3.73 KiB | 3.83 KiB |
+
+## [2.0.0] - 2026-01-23
 
 This was a rewrite that makes significant reductions in code size and enhances performance with minimal functional differences in behavior.
 

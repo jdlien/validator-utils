@@ -1,22 +1,36 @@
 {
   "name": "@jdlien/validator-utils",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "packageManager": "pnpm@10.11.0",
-  "module": "dist/validator-utils.js",
-  "main": "dist/validator-utils.js",
+  "main": "dist/validator-utils.cjs",
+  "module": "dist/validator-utils.mjs",
   "types": "dist/validator-utils.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/validator-utils.d.ts",
+      "import": "./dist/validator-utils.mjs",
+      "require": "./dist/validator-utils.cjs",
+      "default": "./dist/validator-utils.mjs"
+    }
+  },
   "files": [
     "dist"
   ],
+  "unpkg": "dist/validator-utils.js",
+  "jsdelivr": "dist/validator-utils.js",
   "description": "Validation and sanitization functions used by @jdlien/Validator.",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && tsc --emitDeclarationOnly",
+    "build:lib": "pnpm build:lib:esm && pnpm build:lib:compat && tsc --emitDeclarationOnly",
+    "build:lib:esm": "vite build",
+    "build:lib:compat": "vite build --mode compat",
+    "build": "pnpm build:lib",
     "size:wire": "node scripts/measure-wire-size.mjs",
     "preview": "vite preview",
     "test": "vitest",
-    "coverage": "vitest --coverage"
+    "coverage": "vitest --coverage",
+    "prepublishOnly": "pnpm build:lib"
   },
   "repository": {
     "type": "git",
@@ -27,7 +41,7 @@
   },
   "keywords": [
     "validation",
-    "utilties",
+    "utilities",
     "sanitization",
     "date",
     "time",
