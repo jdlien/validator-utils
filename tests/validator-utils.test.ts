@@ -237,12 +237,9 @@ describe('utils', () => {
       // expect(utils.parseDate("aujourd'hui")).toEqual(today)
     })
 
-    // Removed support for yesterday
-    // it('returns yesterday as yesterday\'s date', () => {
-    //   expect(utils.parseDate('yesterday')).toEqual(yesterday)
-    //   expect(utils.parseDate('ayer')).toEqual(yesterday)
-    //   expect(utils.parseDate('hier')).toEqual(yesterday)
-    // })
+    it("returns 'yesterday' as yesterday's date", () => {
+      expect(utils.parseDate('yesterday')).toEqual(yesterday)
+    })
 
     it("returns 'tomorrow' as tomorrow's date", () => {
       expect(utils.parseDate('tomorrow')).toEqual(tomorrow)
@@ -306,6 +303,22 @@ describe('utils', () => {
     it('should return 12:00 PM if "noon" is passed', () => {
       const result = utils.parseTime('noon')
       expect(result).toMatchObject({ hour: 12, minute: 0, second: 0 })
+    })
+
+    it('should return 12:00 AM if "midnight" is passed', () => {
+      const result = utils.parseTime('midnight')
+      expect(result).toMatchObject({ hour: 0, minute: 0, second: 0 })
+    })
+
+    it('should return 12:00 PM if "midday" is passed', () => {
+      const result = utils.parseTime('midday')
+      expect(result).toMatchObject({ hour: 12, minute: 0, second: 0 })
+    })
+
+    it('should handle trailing dots for time keywords', () => {
+      expect(utils.parseTime('noon.')).toMatchObject({ hour: 12, minute: 0, second: 0 })
+      expect(utils.parseTime('midnight.')).toMatchObject({ hour: 0, minute: 0, second: 0 })
+      expect(utils.parseTime('midday.')).toMatchObject({ hour: 12, minute: 0, second: 0 })
     })
 
     it('should return a time if a 3 or 4 digit number is passed', () => {
@@ -594,6 +607,32 @@ describe('utils', () => {
 
     it('should handle "noon" as 12:00 PM', () => {
       expect(utils.parseDateTime('noon')).toEqual(new Date(new Date().setHours(12, 0, 0, 0)))
+    })
+
+    it('should handle "midnight" as 12:00 AM', () => {
+      expect(utils.parseDateTime('midnight')).toEqual(new Date(new Date().setHours(0, 0, 0, 0)))
+    })
+
+    it('should handle "midday" as 12:00 PM', () => {
+      expect(utils.parseDateTime('midday')).toEqual(new Date(new Date().setHours(12, 0, 0, 0)))
+    })
+
+    it('should parse "midnight" within a date string', () => {
+      expect(utils.parseDateTime('2024-01-01 midnight')).toEqual(new Date(2024, 0, 1, 0, 0))
+      expect(utils.parseDateTime('midnight 2024-01-01')).toEqual(new Date(2024, 0, 1, 0, 0))
+    })
+
+    it('should parse "midday" within a date string', () => {
+      expect(utils.parseDateTime('2024-01-01 midday')).toEqual(new Date(2024, 0, 1, 12, 0))
+      expect(utils.parseDateTime('midday 2024-01-01')).toEqual(new Date(2024, 0, 1, 12, 0))
+    })
+
+    it('should handle "yesterday" with a time', () => {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      expect(utils.parseDateTime('yesterday 11:07 PM')).toEqual(
+        new Date(yesterday.setHours(23, 7, 0, 0))
+      )
     })
   })
 

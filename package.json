@@ -1,6 +1,6 @@
 {
   "name": "@jdlien/validator-utils",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "type": "module",
   "packageManager": "pnpm@10.11.0",
   "main": "dist/validator-utils.cjs",

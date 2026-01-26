@@ -15,13 +15,15 @@ const NUMBER_RE = /^-?\d*\.?\d*$/
 
 // ============ TIME PARSING ============
 
+const TIME_KEYWORDS: Record<string, number> = { midnight: 0, noon: 12, midday: 12 }
+
 export function parseTime(value: string): { hour: number; minute: number; second: number } | null {
-  let v = value.trim().toLowerCase()
+  let v = value.trim().toLowerCase().replace(/\.+$/g, '')
   if (v === 'now') {
     const n = new Date()
     return { hour: n.getHours(), minute: n.getMinutes(), second: n.getSeconds() }
   }
-  if (v === 'noon') return { hour: 12, minute: 0, second: 0 }
+  if (v in TIME_KEYWORDS) return { hour: TIME_KEYWORDS[v], minute: 0, second: 0 }
 
   // Remove trailing dots/spaces: "5:0P" -> "5:0p", "1 PM" -> "1pm"
   v = v.replace(/\s+/g, '').replace(/\.+$/g, '')
@@ -75,7 +77,8 @@ export function parseDate(value: string | Date): Date {
   // Special keywords
   const today = new Date(new Date().setHours(0, 0, 0, 0))
   if (/^(now|today)$/.test(v)) return today
-  if (v === 'tomorrow') return new Date(today.setDate(today.getDate() + 1))
+  if (v === 'yesterday') return new Date(today.setDate(today.getDate() - 1))
+  if (v === 'tomorrow') return new Date(new Date().setHours(0, 0, 0, 0) + 86400000)
 
   // Strip weekday names (English, French, Spanish)
   // Note: Using specific patterns to avoid matching month names (e.g., "mar" in March)
@@ -180,10 +183,16 @@ export function parseDateTime(value: string | Date): Date | null {
     return now
   }
 
-  // Special: "noon" returns today at 12:00
-  if (/^noon$/i.test(v)) {
+  // Special: "noon" or "midday" returns today at 12:00
+  if (/^(noon|midday)$/i.test(v)) {
     const now = new Date()
     return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0)
+  }
+
+  // Special: "midnight" returns today at 00:00
+  if (/^midnight$/i.test(v)) {
+    const now = new Date()
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
   }
 
   let time: { hour: number; minute: number; second: number } | null = null
@@ -191,6 +200,8 @@ export function parseDateTime(value: string | Date): Date | null {
 
   // Try to find and extract time portion - order matters!
   const timePatterns = [
+    /\bmidnight\b/i,
+    /\bmidday\b/i,
     /(\d{1,2}:\d{1,2}(?::\d{2})?)\s*([ap]\.?m?\.?)?/i,  // 14:30, 2:30pm, 1:5
     /\b(\d{1,2})\s*([ap]\.?m?\.?)\b/i,  // 2pm, 2p.m., 2 PM, 1P
     /\b(\d{3,4})([ap])m?\b/i,  // 1430pm, 230p, 1200AM
@@ -384,7 +395,7 @@ export function parseRelativeDate(offset: string): Date | null {
   return today
 }
 
-const TIME_TOKEN_RE = /(\d{1,2}:\d{2}|\d{1,2}\.\d{2}|\b\d{1,2}\s*[ap]\b|\b[ap]\.?m\.?\b|\bnoon\b|\bnow\b|T\d{1,2})/i
+const TIME_TOKEN_RE = /(\d{1,2}:\d{2}|\d{1,2}\.\d{2}|\b\d{1,2}\s*[ap]\b|\b[ap]\.?m\.?\b|\bnoon\b|\bmidday\b|\bmidnight\b|\bnow\b|T\d{1,2})/i
 const DATE_TOKEN_RE = /(\d{1,2}[-/.]\d{1,2}(?:[-/.]\d{2,4})?|\b\d{4}\b|\b\d{6,8}\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\b|\btoday\b|\btomorrow\b|\byesterday\b)/i
 
 export function isDateInRange(date: Date, range: string): boolean {
