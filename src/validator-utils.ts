@@ -80,6 +80,12 @@ export function parseDate(value: string | Date): Date {
   if (v === 'yesterday') return new Date(today.setDate(today.getDate() - 1))
   if (v === 'tomorrow') return new Date(new Date().setHours(0, 0, 0, 0) + 86400000)
 
+  // Chinese/Japanese: 2024年1月15日 or Korean: 2024년 1월 15일
+  const cjkMatch = value.match(/(\d{2,4})\s*[年년]\s*(\d{1,2})\s*[月월]\s*(\d{1,2})\s*[日일]?/)
+  if (cjkMatch) {
+    return new Date(yearToFull(+cjkMatch[1]), +cjkMatch[2] - 1, +cjkMatch[3], 0, 0, 0)
+  }
+
   // Strip weekday names (English, French, Spanish)
   // Note: Using specific patterns to avoid matching month names (e.g., "mar" in March)
   v = v.replace(/\b(mon|tue|wed|thu|fri|sat|sun|lun|mar(?:di|tes)|mer|jeu|ven|sam|dim|dom)[a-z]*\.?\b/gi, '').trim()

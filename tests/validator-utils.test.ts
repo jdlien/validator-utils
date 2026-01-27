@@ -287,6 +287,34 @@ describe('utils', () => {
       const year = new Date().getFullYear()
       expect(utils.parseDate('Jan 5')).toEqual(new Date(year, 0, 5))
     })
+
+    // CJK (Chinese/Japanese/Korean) date formats
+    it('parses Chinese date format (2024年1月15日)', () => {
+      expect(utils.parseDate('2024年1月15日')).toEqual(new Date(2024, 0, 15))
+      expect(utils.parseDate('2024年12月31日')).toEqual(new Date(2024, 11, 31))
+      expect(utils.parseDate('24年1月5日')).toEqual(new Date(2024, 0, 5))
+    })
+
+    it('parses Japanese date format (same as Chinese)', () => {
+      expect(utils.parseDate('2024年1月15日')).toEqual(new Date(2024, 0, 15))
+      expect(utils.parseDate('1999年12月31日')).toEqual(new Date(1999, 11, 31))
+    })
+
+    it('parses Korean date format (2024년 1월 15일)', () => {
+      expect(utils.parseDate('2024년 1월 15일')).toEqual(new Date(2024, 0, 15))
+      expect(utils.parseDate('2024년12월31일')).toEqual(new Date(2024, 11, 31))
+      expect(utils.parseDate('24년 1월 5일')).toEqual(new Date(2024, 0, 5))
+    })
+
+    it('parses CJK dates without trailing day marker', () => {
+      expect(utils.parseDate('2024年1月15')).toEqual(new Date(2024, 0, 15))
+      expect(utils.parseDate('2024년 1월 15')).toEqual(new Date(2024, 0, 15))
+    })
+
+    it('parses CJK dates with varied spacing', () => {
+      expect(utils.parseDate('2024 年 1 月 15 日')).toEqual(new Date(2024, 0, 15))
+      expect(utils.parseDate('2024년1월15일')).toEqual(new Date(2024, 0, 15))
+    })
   })
 
   describe('parseTime', () => {
@@ -633,6 +661,22 @@ describe('utils', () => {
       expect(utils.parseDateTime('yesterday 11:07 PM')).toEqual(
         new Date(yesterday.setHours(23, 7, 0, 0))
       )
+    })
+
+    // CJK (Chinese/Japanese/Korean) datetime formats
+    it('parses Chinese datetime format', () => {
+      expect(utils.parseDateTime('2024年1月15日 14:30')).toEqual(new Date(2024, 0, 15, 14, 30))
+      expect(utils.parseDateTime('2024年12月31日 23:59:59')).toEqual(new Date(2024, 11, 31, 23, 59, 59))
+    })
+
+    it('parses Korean datetime format', () => {
+      expect(utils.parseDateTime('2024년 1월 15일 14:30')).toEqual(new Date(2024, 0, 15, 14, 30))
+      expect(utils.parseDateTime('2024년12월31일 11:59 PM')).toEqual(new Date(2024, 11, 31, 23, 59))
+    })
+
+    it('parses CJK date with time first', () => {
+      expect(utils.parseDateTime('14:30 2024年1月15日')).toEqual(new Date(2024, 0, 15, 14, 30))
+      expect(utils.parseDateTime('2PM 2024년 1월 15일')).toEqual(new Date(2024, 0, 15, 14, 0))
     })
   })
 

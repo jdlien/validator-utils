@@ -5,12 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.0] - Unreleased
+## [2.2.0] - Unreleased
 
 ### Added
 
 - Support for `"midnight"` and `"midday"` keywords in `parseTime()` and `parseDateTime()`.
 - Support for `"yesterday"` keyword in `parseDate()` and `parseDateTime()`.
+- **CJK date formats**: `parseDate()` and `parseDateTime()` now support Chinese (`2024年1月15日`), Japanese (same characters), and Korean (`2024년 1월 15일`) date formats.
 
 ## [2.1.0] - 2026-01-26
 

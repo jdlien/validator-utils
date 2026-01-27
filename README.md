@@ -114,3 +114,65 @@ Build the project for testing/release:
 ```bash
 pnpm build
 ```
+
+## FAQ
+
+### What date formats does `parseDate` accept?
+
+Very flexible. It handles ISO 8601 (`2024-01-15`), US (`01/15/2024`, `1-15-24`), European (`15.01.2024`), named months (`Jan 15, 2024`, `15 January 2024`), compact (`20240115`, `240115`), relative keywords (`today`, `tomorrow`, `yesterday`), and two-digit years (interpreted within 20 years of current date). Day names are ignored. The parser intelligently determines what format dates are in based on heuristics, so even more formats than this are supported. For the most part, if it looks like a date used in the western world, it's supported.
+
+### Does it handle timezones?
+
+No. All dates are parsed and returned in local time. If you pass an ISO string with a timezone offset, the timezone is ignored and the literal date/time values are used.
+
+### Does it support non-English date formats?
+
+Yes. It fully supports Chinese (`2024年1月15日`), Japanese, and Korean (`2024년 1월 15일`) date formats. It also recognizes common French (`février`, `avril`, `mai`, `juin`, `juillet`, `août`) and Spanish (`enero`, `abril`, `agosto`) month prefixes, and falls back to the browser's `Date` parser for additional locales.
+
+### Why does `parseDate` return an Invalid Date?
+
+Common causes: unrecognized format, ambiguous input the parser can't resolve, or genuinely invalid dates. Try a more explicit format like `YYYY-MM-DD`. Use `isDate()` to check validity before using the result.
+
+### Can I tree-shake to only include functions I use?
+
+Yes. The package has `"sideEffects": false` in package.json, so bundlers can eliminate unused exports. Use named imports (`import { parseDate } from '...'`) for best results.
+
+### Why is the ESM build larger than CJS?
+
+The ESM build (~15KB) preserves newlines for debuggability; CJS/UMD (~12KB) are fully minified. The gzipped sizes are nearly identical (~4.7-5.2KB) since whitespace compresses well.
+
+### Does it work in Node.js?
+
+Mostly. Two functions require a browser environment:
+- `isColor()` uses `CSS.supports()` — returns `false` in Node for non-trivial colors
+- `parseColor()` uses a canvas element — will throw in Node without a canvas polyfill
+
+All other functions work in Node.js.
+
+### What browsers are supported?
+
+Modern browsers (ES2020+). No IE11 support. The UMD build works in any browser that supports ES6.
+
+### When should I use this vs `@jdlien/validator`?
+
+Use **validator-utils** when you only need parsing/validation functions (e.g., `parseDate`, `isEmail`). Use **@jdlien/validator** when you need form validation with error messages, DOM integration, and field-level validation rules.
+
+### Why use this instead of date-fns, dayjs, or moment.js?
+
+Size and focus. This library is ~5KB gzipped vs 20-70KB+ for full date libraries. It's optimized for parsing messy user input (forms), not date manipulation. If you need date arithmetic, duration formatting, or timezone support, use a dedicated date library.
+
+### Are TypeScript types included?
+
+Yes. Type declarations are bundled in the package (`dist/index.d.ts`).
+
+### How strict is date validation?
+
+`parseDate` is lenient — it tries to extract a valid date from messy input. A nonexistent date like "feb30" or "Apr 31" will 'wrap' to the next month and return 'March 2' or 'May 1' of the current year. Completely invalid dates or nonsensical input returns `Invalid Date`. Use `isDate()` to verify the result is valid before using it.
+
+### What counts as a valid email?
+
+The `isEmail` function uses a practical regex that covers most real-world addresses: alphanumeric local parts with common special characters, domain with at least one dot, and a 2+ character TLD. By design, it's not fully RFC 5322 compliant (which allows quoted strings and other rarities).
+
+### Does `isNANPTel` require dashes?
+
+`isNANPTel` validates the format `###-###-####` with dashes. Use `parseNANPTel` first to normalize various inputs (spaces, dots, parentheses) into this format, then validate.
