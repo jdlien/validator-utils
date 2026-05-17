@@ -5,7 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.2.0] - Unreleased
+## [2.2.1] - 2026-05-16
+
+### Changed
+
+- Upgraded all dev dependencies to latest versions, including major upgrades for `vite` (7 → 8), `typescript` (5 → 6), `jsdom` (27 → 29), and `@types/jsdom` (27 → 28). No runtime behavior changes; bundle wire size is unchanged or slightly smaller.
+- `tsconfig.json`: switched `moduleResolution` from `Node` to `bundler` (TypeScript 6 deprecated `node10`).
+
+## [2.2.0] - 2026-01-27
 
 ### Added
 

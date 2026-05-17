@@ -1,6 +1,6 @@
 {
   "name": "@jdlien/validator-utils",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "type": "module",
   "packageManager": "pnpm@10.11.0",
   "main": "dist/validator-utils.cjs",
@@ -54,15 +54,15 @@
   },
   "homepage": "https://github.com/jdlien/validator-utils#readme",
   "devDependencies": {
-    "@types/jsdom": "^27.0.0",
-    "@vitest/coverage-v8": "^4.0.18",
-    "canvas": "^3.2.1",
-    "jsdom": "^27.4.0",
+    "@types/jsdom": "^28.0.3",
+    "@vitest/coverage-v8": "^4.1.6",
+    "canvas": "^3.2.3",
+    "jsdom": "^29.1.1",
     "jsdom-global": "^3.0.2",
-    "prettier": "^3.8.1",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.1",
-    "vitest": "^4.0.18"
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.13",
+    "vitest": "^4.1.6"
   },
   "sideEffects": false,
   "pnpm": {
